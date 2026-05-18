@@ -109,3 +109,34 @@ After registration, ask Open WebUI:
 ```text
 Use status_check to check hermes and research_repo. Summarize the result.
 ```
+
+## Verified Result
+
+Verified on 2026-05-18 using Open WebUI model:
+
+```text
+openai/gpt-oss-120b
+```
+
+Working prompts:
+
+```text
+Use status_check_tool with target="hermes" and timeout_ms=1500. Return the JSON result.
+Use status_check_tool with target="research_repo" and timeout_ms=1500. Return the JSON result.
+Use status_check_tool with target="paperclip" and timeout_ms=1500. Return the JSON result.
+```
+
+Observed results:
+
+```text
+hermes: online
+research_repo: online
+paperclip: online
+```
+
+Model caveat:
+
+```text
+Mistral and Qwen variants did not reliably invoke the tool.
+Use GPT OSS for tool-calling flows until other models are verified.
+```

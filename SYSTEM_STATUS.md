@@ -8,6 +8,8 @@ Veloce Research OS v1.1 is operational as a self-hosted research operating syste
 
 The system is ready for controlled use. Hermes standalone and Hermes memory persistence are verified. Paperclip-to-Hermes execution remains deferred because Paperclip's local Hermes adapter cannot find a local `hermes` command.
 
+V1.2 core is also verified: Open WebUI can call the `Veloce Status Check` tool through the native Open WebUI tool interface when using `openai/gpt-oss-120b`.
+
 ## Service URLs
 
 ```text
@@ -37,6 +39,8 @@ GitHub: https://github.com/dev4-gpt/veloce-research-os
 - Direct NVIDIA models work in Open WebUI for fast model calls.
 - Hermes container runs and can respond through its API.
 - Hermes memory persists across separate API requests.
+- Open WebUI can call the `status_check_tool` native tool.
+- `status_check_tool` verified `hermes`, `paperclip`, and `research_repo`.
 - GitHub repository is populated and is the source of truth for code.
 - VPS can pull and run the GitHub repository.
 - Obsidian contains the exported research artifacts and operating notes.
@@ -112,6 +116,34 @@ Paperclip -> Hermes local adapter: deferred
 ```
 
 ## Partial or Deferred
+
+### Open WebUI Tool Calling
+
+Verified:
+
+```text
+Tool: Veloce Status Check
+Imported from: https://raw.githubusercontent.com/dev4-gpt/veloce-research-os/main/tools/openwebui/status_check_tool.py
+Working model: openai/gpt-oss-120b
+Verified targets: hermes, paperclip, research_repo
+```
+
+Observed limitation:
+
+```text
+Mistral and Qwen variants did not reliably invoke the tool.
+Use GPT OSS for tool-calling flows until other models are proven.
+```
+
+VPS health proof:
+
+```text
+aiagency-status-tool: healthy
+aiagency-openwebui: healthy
+aiagency-hermes: running
+paperclip-iraj-paperclip-1: running
+traefik-traefik-1: running
+```
 
 ### Paperclip to Hermes
 
@@ -192,7 +224,7 @@ If a Paperclip agent says it cannot access `/root/veloce-research-os`, complete 
 - [x] Verify Open WebUI and Hermes containers are running.
 - [x] Verify `reliability-policy-matrix` tests pass on the VPS.
 
-## Recommended V1.2 Task
+## Recommended V1.3 Task
 
 ```text
 Add a Paperclip-to-Hermes HTTP adapter so Paperclip can call Hermes through https://hermes.srv1314350.hstgr.cloud instead of trying to run a local hermes command.
