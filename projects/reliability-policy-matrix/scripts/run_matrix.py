@@ -12,6 +12,7 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
+from rpmatrix.benchmark_adapter import adapter_for_benchmark
 from rpmatrix.config import expand_conditions, load_matrix_config
 
 
@@ -32,10 +33,46 @@ def deterministic_score(condition: dict[str, Any]) -> float:
     return int(digest[:8], 16) / 0xFFFFFFFF
 
 
+def dry_run_outcome(condition: dict[str, Any]) -> dict[str, Any]:
+    score = deterministic_score(condition)
+    completed = score >= 0.35
+    return {
+        "mode": "dry-run",
+        "completed": completed,
+        "success_under_budget": completed and score >= 0.5,
+        "critical_failure": score < 0.12,
+        "steps": int(3 + score * condition["budget"]["max_steps"]),
+        "score": round(score, 4),
+    }
+
+
+def adapter_stub_outcome(condition: dict[str, Any]) -> dict[str, Any]:
+    adapter = adapter_for_benchmark(condition["benchmark"])
+    tasks = adapter.load_tasks()
+    return {
+        "mode": "adapter-stub",
+        "adapter": adapter.name,
+        "loaded_tasks": len(tasks),
+        "task_ids": [task.task_id for task in tasks],
+        "completed": False,
+        "success_under_budget": False,
+        "critical_failure": False,
+        "steps": 0,
+        "score": 0.0,
+        "next_action": "Connect this adapter to the real benchmark runtime.",
+    }
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", default="configs/matrix.base.yaml")
     parser.add_argument("--limit", type=int, default=0)
+    parser.add_argument(
+        "--mode",
+        choices=["dry-run", "adapter-stub"],
+        default="dry-run",
+        help="Use dry-run for deterministic placeholder records, or adapter-stub to validate manifest loading.",
+    )
     args = parser.parse_args()
 
     config = load_matrix_config(args.config)
@@ -47,22 +84,14 @@ def main() -> None:
     sha = git_sha()
 
     for index, condition in enumerate(conditions, start=1):
-        score = deterministic_score(condition)
-        completed = score >= 0.35
-        critical_failure = score < 0.12
         run_id = f"{condition['matrix']}-{index:04d}-{condition['policy']}-{condition['seed']}"
+        outcome = dry_run_outcome(condition) if args.mode == "dry-run" else adapter_stub_outcome(condition)
         record = {
             "run_id": run_id,
             "created_at": datetime.now(timezone.utc).isoformat(),
             "git_sha": sha,
             **condition,
-            "outcome": {
-                "completed": completed,
-                "success_under_budget": completed and score >= 0.5,
-                "critical_failure": critical_failure,
-                "steps": int(3 + score * condition["budget"]["max_steps"]),
-                "score": round(score, 4),
-            },
+            "outcome": outcome,
         }
         out_path = config.output_dir / f"{run_id}.json"
         out_path.write_text(json.dumps(record, indent=2) + "\n")

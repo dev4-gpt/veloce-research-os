@@ -31,6 +31,22 @@ make run-sample
 make aggregate-sample
 ```
 
+The default runner mode is `dry-run`. It writes deterministic placeholder
+records so the matrix, aggregation, and dashboard plumbing can be tested before
+real benchmark credentials exist.
+
+```bash
+python3 scripts/run_matrix.py --config configs/matrix.base.yaml --mode dry-run --limit 3
+```
+
+Step 17 adds the first adapter path. `adapter-stub` validates that benchmark
+manifests can be loaded through an adapter interface without launching the real
+OSWorld, VisualWebArena, or ITBench runtimes yet.
+
+```bash
+python3 scripts/run_matrix.py --config configs/matrix.week1_day1_3.yaml --mode adapter-stub --limit 1
+```
+
 ## Week 1 Day 1-3 Commands
 
 ```bash
