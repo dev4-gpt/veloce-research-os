@@ -202,4 +202,5 @@ Detailed plan:
 
 ```text
 docs/v1.2-integration-plan.md
+docs/v1.2-design-review.md
 ```
