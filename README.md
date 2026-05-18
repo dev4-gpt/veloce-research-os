@@ -21,6 +21,7 @@ projects/
   reliability-policy-matrix/
 tools/
   openwebui/
+  paperclip/
   status-check-server/
 ```
 
@@ -31,6 +32,7 @@ tools/
 3. Build from `projects/reliability-policy-matrix/`.
 4. For service integration, read `docs/v1.2-integration-plan.md`.
 5. For the first Open WebUI tool, read `docs/status-check-tool.md`.
+6. For the v1.3 Paperclip-to-Hermes bridge, read `docs/paperclip-hermes-http-agent.md`.
 
 ## Flagship Project
 
@@ -68,4 +70,4 @@ make aggregate-sample
 
 Planning artifacts are complete and synced from Paperclip/Obsidian. The project scaffold is intentionally minimal and runnable; real benchmark adapters are the next implementation layer.
 
-For the deployed service flow, v1.1 verifies Paperclip, Open WebUI, Hermes standalone, Hermes memory, GitHub, VPS, and Obsidian. V1.2 focuses on making these pieces work together through a Paperclip-to-Hermes HTTP path and an Open WebUI tool layer.
+For the deployed service flow, v1.1 verifies Paperclip, Open WebUI, Hermes standalone, Hermes memory, GitHub, VPS, and Obsidian. V1.2 adds the Open WebUI status tool. V1.3 starts the Paperclip-to-Hermes HTTP bridge without relying on the broken local `hermes` command.

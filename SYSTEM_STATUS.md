@@ -147,7 +147,7 @@ traefik-traefik-1: running
 
 ### Paperclip to Hermes
 
-Paperclip's local Hermes adapter remains deferred.
+Paperclip's local Hermes adapter remains deferred, but v1.3 now has a repository-backed HTTP shim to test.
 
 Reason:
 
@@ -158,7 +158,13 @@ The adapter tries to run a local `hermes` command inside the Paperclip runtime. 
 Future fix:
 
 ```text
-Add a Paperclip-to-Hermes HTTP adapter that calls https://hermes.srv1314350.hstgr.cloud/v1/chat/completions with API_SERVER_KEY.
+Install tools/paperclip/hermes_http_agent.mjs into /paperclip/adapters/ and test it against http://hermes:8642/v1/chat/completions with API_SERVER_KEY.
+```
+
+V1.3 shim docs:
+
+```text
+docs/paperclip-hermes-http-agent.md
 ```
 
 Decision:
@@ -227,7 +233,7 @@ If a Paperclip agent says it cannot access `/root/veloce-research-os`, complete 
 ## Recommended V1.3 Task
 
 ```text
-Add a Paperclip-to-Hermes HTTP adapter so Paperclip can call Hermes through https://hermes.srv1314350.hstgr.cloud instead of trying to run a local hermes command.
+Install and verify the Paperclip-to-Hermes HTTP shim so Paperclip can call Hermes through http://hermes:8642/v1 instead of trying to run a local hermes command.
 ```
 
 Detailed plan:
@@ -236,4 +242,5 @@ Detailed plan:
 docs/v1.2-integration-plan.md
 docs/v1.2-design-review.md
 docs/status-check-tool.md
+docs/paperclip-hermes-http-agent.md
 ```
