@@ -1,0 +1,60 @@
+# Reliability Policy Matrix
+
+Reliability Policy Matrix is a reproducible experiment scaffold for comparing computer-use agent reliability policies.
+
+## Goal
+
+Measure which policy stack produces the best completion/reliability tradeoff on realistic computer-use tasks under fixed action and token budgets.
+
+## Policy Variants
+
+- `P0`: ReAct baseline
+- `P1`: ReAct + reflection checkpoint
+- `P2`: ReAct + recovery playbook
+
+## Benchmark Slices
+
+- OSWorld subset
+- VisualWebArena subset
+- ITBench subset
+
+The current repository uses placeholder manifests so the command path works before real benchmark credentials and task definitions are added.
+
+## Quickstart
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -e .[dev]
+make matrix-plan
+make run-sample
+make aggregate-sample
+```
+
+## Week 1 Day 1-3 Commands
+
+```bash
+make week1-plan
+make week1-sample
+make week1-full
+```
+
+## Outputs
+
+Generated outputs are written under:
+
+```text
+artifacts/raw/
+artifacts/derived/
+artifacts/figures/
+```
+
+Generated artifacts are ignored by git except for `.gitkeep` files.
+
+## Reproducibility Contract
+
+- Keep all experiment configs in versioned YAML.
+- Store raw run records separately from derived metrics.
+- Capture run ID, benchmark, policy, seed, budget, timestamp, and git SHA.
+- Do not commit secrets or provider keys.
+- Use placeholder manifests until real benchmark tasks are approved.

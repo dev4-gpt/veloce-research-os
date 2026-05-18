@@ -1,0 +1,3 @@
+id: react_recover
+name: P2 ReAct with recovery playbook
+description: Adds retry, replan, and escalation heuristics for recoverable failures.

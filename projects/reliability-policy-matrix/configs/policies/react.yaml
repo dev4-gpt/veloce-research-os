@@ -1,0 +1,3 @@
+id: react
+name: P0 ReAct baseline
+description: Baseline reason-act loop without explicit reflection or recovery policy.

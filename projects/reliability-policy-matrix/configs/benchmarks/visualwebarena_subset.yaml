@@ -1,0 +1,4 @@
+id: visualwebarena_subset
+name: VisualWebArena scoped subset
+manifest: manifests/visualwebarena_subset.jsonl
+description: Placeholder subset for visual web navigation tasks.

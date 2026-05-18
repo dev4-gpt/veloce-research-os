@@ -1,0 +1,17 @@
+name: matrix_base
+benchmarks:
+  - osworld_subset
+  - visualwebarena_subset
+  - itbench_subset
+policies:
+  - react
+  - react_reflect
+  - react_recover
+seeds:
+  - 13
+  - 17
+  - 23
+budget:
+  max_steps: 25
+  max_tokens: 12000
+output_dir: artifacts/raw

@@ -1,0 +1,16 @@
+.DS_Store
+.env
+*.log
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+dist/
+build/
+*.egg-info/
+projects/reliability-policy-matrix/artifacts/raw/*
+projects/reliability-policy-matrix/artifacts/derived/*
+projects/reliability-policy-matrix/artifacts/figures/*
+!projects/reliability-policy-matrix/artifacts/raw/.gitkeep
+!projects/reliability-policy-matrix/artifacts/derived/.gitkeep
+!projects/reliability-policy-matrix/artifacts/figures/.gitkeep

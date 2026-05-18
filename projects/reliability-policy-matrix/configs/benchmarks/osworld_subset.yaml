@@ -1,0 +1,4 @@
+id: osworld_subset
+name: OSWorld scoped subset
+manifest: manifests/osworld_subset.jsonl
+description: Placeholder subset for desktop/computer-use tasks.

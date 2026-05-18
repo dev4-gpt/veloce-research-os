@@ -1,0 +1,13 @@
+name: week1_day1_3
+benchmarks:
+  - osworld_subset
+  - visualwebarena_subset
+  - itbench_subset
+policies:
+  - react
+seeds:
+  - 13
+budget:
+  max_steps: 10
+  max_tokens: 4000
+output_dir: artifacts/raw

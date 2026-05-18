@@ -1,0 +1,4 @@
+id: itbench_subset
+name: ITBench scoped subset
+manifest: manifests/itbench_subset.jsonl
+description: Placeholder subset for IT automation tasks.

@@ -1,0 +1,2 @@
+{"task_id":"itbench.placeholder.001","title":"Inspect service health and summarize status","source":"placeholder","requires_credentials":false}
+{"task_id":"itbench.placeholder.002","title":"Parse a log excerpt and classify failure type","source":"placeholder","requires_credentials":false}
