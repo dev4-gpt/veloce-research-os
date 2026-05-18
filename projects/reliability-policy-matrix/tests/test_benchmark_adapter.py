@@ -6,10 +6,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from rpmatrix.benchmark_adapter import OSWorldAdapter, adapter_for_benchmark
 
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
 
 class BenchmarkAdapterTest(unittest.TestCase):
     def test_osworld_stub_loads_manifest_tasks(self) -> None:
-        tasks = OSWorldAdapter("manifests/osworld_subset.jsonl").load_tasks()
+        tasks = OSWorldAdapter(PROJECT_ROOT / "manifests" / "osworld_subset.jsonl").load_tasks()
         self.assertGreaterEqual(len(tasks), 1)
         self.assertEqual(tasks[0].source, "osworld_subset")
         self.assertTrue(tasks[0].task_id)

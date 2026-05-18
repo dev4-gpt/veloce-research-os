@@ -11,11 +11,16 @@ docs/
   research-os-v1.md
   artifact-index.md
   setup-log.md
+  status-check-tool.md
 artifacts/
   primary/
   audit/
+deploy/
+  ai-agency/
 projects/
   reliability-policy-matrix/
+tools/
+  status-check-server/
 ```
 
 ## Start Here
@@ -24,6 +29,7 @@ projects/
 2. Review the primary Paperclip artifacts in `artifacts/primary/`.
 3. Build from `projects/reliability-policy-matrix/`.
 4. For service integration, read `docs/v1.2-integration-plan.md`.
+5. For the first Open WebUI tool, read `docs/status-check-tool.md`.
 
 ## Flagship Project
 

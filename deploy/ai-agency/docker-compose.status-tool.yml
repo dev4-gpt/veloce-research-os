@@ -1,0 +1,40 @@
+# docker-compose.status-tool.yml
+# Optional v1.2 status_check OpenAPI tool server for Open WebUI.
+
+services:
+  status-tool:
+    build:
+      context: /root/veloce-research-os/tools/status-check-server
+    image: veloce/status-check-server:0.1.0
+    container_name: aiagency-status-tool
+    restart: unless-stopped
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    user: "65532:65532"
+    environment:
+      STATUS_TOOL_HOST: 0.0.0.0
+      STATUS_TOOL_PORT: "8080"
+      RESEARCH_REPO_PATH: /repo
+      OPENWEBUI_HEALTH_URL: http://openwebui:8080/api/version
+      HERMES_HEALTH_URL: http://hermes:8642/health
+      PAPERCLIP_HEALTH_URL: http://paperclip:3100/
+    volumes:
+      - /root/veloce-research-os:/repo:ro
+    tmpfs:
+      - /tmp
+    networks:
+      - aiagency
+    expose:
+      - "8080"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/healthz', timeout=3).read()"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+networks:
+  aiagency:
+    external: true
