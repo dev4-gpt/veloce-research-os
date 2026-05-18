@@ -4,9 +4,9 @@ Date: 2026-05-18
 
 ## Summary
 
-Veloce Research OS v1 is operational as a self-hosted research operating system running on the Hostinger VPS with Paperclip, Open WebUI, Hermes, direct NVIDIA model access, GitHub, Obsidian, and a runnable research project scaffold.
+Veloce Research OS v1.1 is operational as a self-hosted research operating system running on the Hostinger VPS with Paperclip, Open WebUI, Hermes, direct NVIDIA model access, GitHub, Obsidian, and a runnable research project scaffold.
 
-The system is ready for controlled use. Hermes is usable but should be treated as partial for v1 because memory persistence and Paperclip-to-Hermes execution are not fully validated.
+The system is ready for controlled use. Hermes standalone and Hermes memory persistence are verified. Paperclip-to-Hermes execution remains deferred because Paperclip's local Hermes adapter cannot find a local `hermes` command.
 
 ## Service URLs
 
@@ -36,6 +36,7 @@ GitHub: https://github.com/dev4-gpt/veloce-research-os
 - Open WebUI is reachable and usable as the chat interface.
 - Direct NVIDIA models work in Open WebUI for fast model calls.
 - Hermes container runs and can respond through its API.
+- Hermes memory persists across separate API requests.
 - GitHub repository is populated and is the source of truth for code.
 - VPS can pull and run the GitHub repository.
 - Obsidian contains the exported research artifacts and operating notes.
@@ -65,24 +66,75 @@ Raw run JSON artifacts were generated.
 Derived summary CSV was generated.
 ```
 
+## Hermes Verification
+
+Verified on 2026-05-18:
+
+```bash
+cd /root/ai-agency
+set -a
+source .env
+set +a
+
+curl -sS https://hermes.srv1314350.hstgr.cloud/health
+
+curl -sS https://hermes.srv1314350.hstgr.cloud/v1/models \
+  -H "Authorization: Bearer $API_SERVER_KEY"
+
+curl -sS https://hermes.srv1314350.hstgr.cloud/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $API_SERVER_KEY" \
+  -d '{"model":"hermes-agent","messages":[{"role":"user","content":"Reply with exactly: Hermes standalone verified"}]}'
+```
+
+Result:
+
+```text
+Health endpoint returned ok.
+Models endpoint returned hermes-agent.
+Chat completion returned: Hermes standalone verified.
+```
+
+Memory verification:
+
+```text
+Stored fact: Veloce Hermes memory code is Silver Atlas.
+Separate request returned: Silver Atlas.
+```
+
+Hermes status:
+
+```text
+Hermes standalone: complete
+Hermes memory persistence: complete
+Hermes token overhead: known limitation
+Paperclip -> Hermes local adapter: deferred
+```
+
 ## Partial or Deferred
 
-### Hermes
+### Paperclip to Hermes
 
-Hermes is installed and reachable, but v1 should not depend on Hermes for every workflow.
+Paperclip's local Hermes adapter remains deferred.
 
-Reasons:
+Reason:
 
-- Hermes adds large agent-runtime context, making simple requests slower and token-heavy.
-- Memory persistence still needs a formal two-session verification artifact.
-- Paperclip's local Hermes adapter failed because the Paperclip runtime could not find a local `hermes` command.
-- A proper Paperclip-to-Hermes HTTP adapter remains a v1.1 task.
+```text
+The adapter tries to run a local `hermes` command inside the Paperclip runtime. That command is not available in Paperclip's PATH.
+```
+
+Future fix:
+
+```text
+Add a Paperclip-to-Hermes HTTP adapter that calls https://hermes.srv1314350.hstgr.cloud/v1/chat/completions with API_SERVER_KEY.
+```
 
 Decision:
 
 ```text
 Use direct NVIDIA models for fast Open WebUI work.
-Use Hermes only when agent behavior or memory is specifically needed.
+Use Hermes when agent behavior or memory is specifically needed.
+Do not rely on Paperclip's local Hermes adapter yet.
 ```
 
 ### Ruflo / MCPO
@@ -131,13 +183,16 @@ If a Paperclip agent says it cannot access `/root/veloce-research-os`, complete 
 
 ## V1 Closeout Checklist
 
-- [ ] Confirm Paperclip Step 01-21 issues are Done.
-- [ ] Confirm recovery issues are Done or Cancelled.
-- [ ] Export any new Paperclip markdown artifacts into Obsidian.
-- [ ] Commit and push this `SYSTEM_STATUS.md`.
-- [ ] Stop adding Paperclip issues until v1 status is frozen.
+- [x] Confirm Paperclip Step 01-21 issues are Done.
+- [x] Confirm recovery issues are Done or Cancelled.
+- [x] Export main Paperclip markdown artifacts into Obsidian.
+- [x] Commit and push this `SYSTEM_STATUS.md`.
+- [x] Verify Hermes standalone response.
+- [x] Verify Hermes memory persistence.
+- [x] Verify Open WebUI and Hermes containers are running.
+- [x] Verify `reliability-policy-matrix` tests pass on the VPS.
 
-## Recommended V1.1 Task
+## Recommended V1.2 Task
 
 ```text
 Add a Paperclip-to-Hermes HTTP adapter so Paperclip can call Hermes through https://hermes.srv1314350.hstgr.cloud instead of trying to run a local hermes command.
