@@ -23,6 +23,7 @@ projects/
 1. Read `docs/research-os-v1.md`.
 2. Review the primary Paperclip artifacts in `artifacts/primary/`.
 3. Build from `projects/reliability-policy-matrix/`.
+4. For service integration, read `docs/v1.2-integration-plan.md`.
 
 ## Flagship Project
 
@@ -59,3 +60,5 @@ make aggregate-sample
 ## Current Status
 
 Planning artifacts are complete and synced from Paperclip/Obsidian. The project scaffold is intentionally minimal and runnable; real benchmark adapters are the next implementation layer.
+
+For the deployed service flow, v1.1 verifies Paperclip, Open WebUI, Hermes standalone, Hermes memory, GitHub, VPS, and Obsidian. V1.2 focuses on making these pieces work together through a Paperclip-to-Hermes HTTP path and an Open WebUI tool layer.

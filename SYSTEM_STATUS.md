@@ -197,3 +197,9 @@ If a Paperclip agent says it cannot access `/root/veloce-research-os`, complete 
 ```text
 Add a Paperclip-to-Hermes HTTP adapter so Paperclip can call Hermes through https://hermes.srv1314350.hstgr.cloud instead of trying to run a local hermes command.
 ```
+
+Detailed plan:
+
+```text
+docs/v1.2-integration-plan.md
+```
