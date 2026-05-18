@@ -2,8 +2,6 @@ FROM python:3.12.10-slim
 
 WORKDIR /app
 
-RUN adduser --system --uid 65532 --group appuser
-
 COPY app.py /app/app.py
 
 USER 65532:65532
