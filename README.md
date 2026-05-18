@@ -20,6 +20,7 @@ deploy/
 projects/
   reliability-policy-matrix/
 tools/
+  openwebui/
   status-check-server/
 ```
 

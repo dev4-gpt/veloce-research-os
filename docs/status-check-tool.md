@@ -65,6 +65,43 @@ http://status-tool:8080/openapi.json
 
 If Open WebUI cannot register an internal Docker URL, expose the tool through Traefik later with authentication. Do not expose it publicly without auth.
 
+## Open WebUI Native Tool Fallback
+
+If Open WebUI shows an error like:
+
+```text
+true is not defined
+```
+
+then Open WebUI is interpreting the OpenAPI JSON as Python code. Do not paste `/openapi.json` into the Python Tool editor.
+
+Use the native Open WebUI Tool instead:
+
+```text
+tools/openwebui/status_check_tool.py
+```
+
+Steps:
+
+1. Go to Open WebUI `Workspace`.
+2. Open `Tools`.
+3. Create or import a new Python tool.
+4. Paste the full contents of `tools/openwebui/status_check_tool.py`.
+5. Save it as `Veloce Status Check`.
+6. Enable it in the chat tool selector.
+
+Then ask:
+
+```text
+Use status_check with target="hermes" and timeout_ms=1500. Return the JSON result.
+```
+
+And:
+
+```text
+Use status_check with target="research_repo" and timeout_ms=1500. Return the JSON result.
+```
+
 ## Test Prompt
 
 After registration, ask Open WebUI:
