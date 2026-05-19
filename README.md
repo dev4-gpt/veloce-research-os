@@ -25,6 +25,7 @@ tools/
   paperclip/
   status-check-server/
   mcpo/
+  mcpo-openwebui-proxy/
 ```
 
 ## Start Here
@@ -73,4 +74,4 @@ make aggregate-sample
 
 Planning artifacts are complete and synced from Paperclip/Obsidian. The project scaffold is intentionally minimal and runnable; real benchmark adapters are the next implementation layer.
 
-For the deployed service flow, v1.1 verifies Paperclip, Open WebUI, Hermes standalone, Hermes memory, GitHub, VPS, and Obsidian. V1.2 adds the Open WebUI status tool. V1.3 verifies the Paperclip-to-Hermes HTTP wrapper without relying on the broken local `hermes` command. V1.4 adds token-control rules and starts MCPO behind a safe single-tool gate before any Ruflo production use.
+For the deployed service flow, v1.1 verifies Paperclip, Open WebUI, Hermes standalone, Hermes memory, GitHub, VPS, and Obsidian. V1.2 adds the Open WebUI status tool. V1.3 verifies the Paperclip-to-Hermes HTTP wrapper without relying on the broken local `hermes` command. V1.4 adds token-control rules and starts MCPO behind a safe single-tool gate plus an Open WebUI-compatible proxy before any Ruflo production use.

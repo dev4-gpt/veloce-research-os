@@ -46,6 +46,7 @@ GitHub: https://github.com/dev4-gpt/veloce-research-os
 - `status_check_tool` verified `hermes`, `paperclip`, and `research_repo`.
 - MCPO is running as `aiagency-mcpo-time`.
 - MCPO exposes `/docs`, `/openapi.json`, `/get_current_time`, and `/convert_time` internally.
+- Open WebUI should import MCPO through the proxy at `https://tools.srv1314350.hstgr.cloud/openapi.json`.
 - MCPO `get_current_time` returned valid `America/New_York` time JSON.
 - GitHub repository is populated and is the source of truth for code.
 - VPS can pull and run the GitHub repository.

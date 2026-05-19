@@ -16,6 +16,7 @@ Status as of 2026-05-19:
 Verified on VPS.
 Container: aiagency-mcpo-time
 Internal URL: http://mcpo-time:8000/openapi.json
+Open WebUI proxy: https://tools.srv1314350.hstgr.cloud/openapi.json
 OpenAPI paths: /get_current_time, /convert_time
 ```
 
@@ -46,7 +47,7 @@ git pull
 cp deploy/ai-agency/docker-compose.mcpo.yml /root/ai-agency/docker-compose.mcpo.yml
 
 cd /root/ai-agency
-docker compose -f docker-compose.yml -f docker-compose.status-tool.yml -f docker-compose.mcpo.yml up -d --build mcpo-time
+docker compose -f docker-compose.yml -f docker-compose.status-tool.yml -f docker-compose.mcpo.yml up -d --build mcpo-time mcpo-openwebui-proxy
 docker compose -f docker-compose.yml -f docker-compose.status-tool.yml -f docker-compose.mcpo.yml ps
 ```
 
@@ -81,6 +82,30 @@ GET /openapi.json -> title mcpo-time, paths /get_current_time and /convert_time
 POST /get_current_time with {"timezone":"America/New_York"} returned valid JSON time data
 ```
 
+### Open WebUI Proxy Verification
+
+Open WebUI may fail to import raw MCPO directly, especially when the schema is protected or when the UI cannot reach Docker-only service names. For that reason, v1.4 uses a tiny proxy in front of MCPO:
+
+```text
+Container: aiagency-mcpo-openwebui-proxy
+Public OpenAPI URL: https://tools.srv1314350.hstgr.cloud/openapi.json
+Upstream MCPO URL: http://mcpo-time:8000
+```
+
+Verify from any machine:
+
+```bash
+curl -i https://tools.srv1314350.hstgr.cloud/openapi.json
+```
+
+Expected result:
+
+```text
+HTTP 200
+OpenAPI version 3.0.3
+Paths: /get_current_time, /convert_time
+```
+
 Verified direct call:
 
 ```bash
@@ -108,8 +133,9 @@ In Open WebUI:
 
 ```text
 Admin / Workspace -> Tools -> Add OpenAPI Server
-URL: http://mcpo-time:8000/openapi.json
-Header: {"Authorization":"Bearer <MCPO_API_KEY>"}
+Name: Veloce MCPO Time
+URL: https://tools.srv1314350.hstgr.cloud/openapi.json
+Auth: Bearer <MCPO_API_KEY>
 ```
 
 Use a model already proven to call tools:

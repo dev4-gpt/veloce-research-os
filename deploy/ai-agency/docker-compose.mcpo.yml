@@ -31,6 +31,41 @@ services:
       timeout: 5s
       retries: 3
 
+  mcpo-openwebui-proxy:
+    build:
+      context: /root/veloce-research-os/tools/mcpo-openwebui-proxy
+    image: veloce/mcpo-openwebui-proxy:0.1.0
+    container_name: aiagency-mcpo-openwebui-proxy
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      MCPO_BASE_URL: http://mcpo-time:8000
+      PUBLIC_BASE_URL: https://tools.${DOMAIN}
+      ALLOWED_ORIGIN: https://chat.${DOMAIN}
+    networks:
+      - aiagency
+    expose:
+      - "8080"
+    depends_on:
+      - mcpo-time
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.aiagency-tools.rule=Host(`tools.${DOMAIN}`)
+      - traefik.http.routers.aiagency-tools.entrypoints=websecure
+      - traefik.http.routers.aiagency-tools.tls.certresolver=letsencrypt
+      - traefik.http.services.aiagency-tools.loadbalancer.server.port=8080
+      - traefik.http.routers.aiagency-tools-http.rule=Host(`tools.${DOMAIN}`)
+      - traefik.http.routers.aiagency-tools-http.entrypoints=web
+      - traefik.http.routers.aiagency-tools-http.middlewares=aiagency-tools-redirect
+      - traefik.http.middlewares.aiagency-tools-redirect.redirectscheme.scheme=https
+      - traefik.http.middlewares.aiagency-tools-redirect.redirectscheme.permanent=true
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/healthz', timeout=3).read()"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
 networks:
   aiagency:
     external: true
