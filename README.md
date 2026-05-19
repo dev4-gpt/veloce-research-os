@@ -12,6 +12,7 @@ docs/
   artifact-index.md
   setup-log.md
   status-check-tool.md
+  mcpo-stack-status-tool.md
   v1.4-hermes-mcpo-ruflo-plan.md
   v1.5-mcpo-ruflo-orchestration.md
 artifacts/
@@ -39,6 +40,7 @@ tools/
 6. For the v1.3 Paperclip-to-Hermes bridge, read `docs/paperclip-hermes-http-agent.md`.
 7. For Hermes token control plus MCPO/Ruflo expansion, read `docs/v1.4-hermes-mcpo-ruflo-plan.md`.
 8. For the next MCPO and Ruflo orchestration path, read `docs/v1.5-mcpo-ruflo-orchestration.md`.
+9. For the first read-only MCPO status expansion, read `docs/mcpo-stack-status-tool.md`.
 
 ## Flagship Project
 

@@ -49,7 +49,8 @@ GitHub: https://github.com/dev4-gpt/veloce-research-os
 - Open WebUI should import MCPO through the proxy at `https://tools.srv1314350.hstgr.cloud/openapi.json`.
 - MCPO `get_current_time` returned valid `America/New_York` time JSON.
 - Open WebUI native tool `Veloce MCPO Time` is installed and verified from chat.
-- V1.5 next MCPO additions should be read-only tools: `stack_status`, `repo_status`, and `artifact_index`.
+- V1.5 repo support exists for read-only `stack_status`.
+- V1.5 next MCPO additions after stack status should be read-only tools: `repo_status` and `artifact_index`.
 - GitHub repository is populated and is the source of truth for code.
 - VPS can pull and run the GitHub repository.
 - Obsidian contains the exported research artifacts and operating notes.
@@ -261,7 +262,7 @@ If a Paperclip agent says it cannot access `/root/veloce-research-os`, complete 
 - [x] Verify MCPO `/openapi.json` exposes time tool paths.
 - [x] Verify MCPO `/get_current_time` returns New York time JSON.
 - [x] Verify Open WebUI chat can invoke the MCPO time bridge and produce proxy log proof.
-- [ ] Add MCPO read-only `stack_status` tool.
+- [ ] Deploy and verify MCPO read-only `stack_status` tool.
 - [ ] Add MCPO read-only `repo_status` tool.
 - [ ] Evaluate Ruflo in isolated planning-only sandbox.
 
