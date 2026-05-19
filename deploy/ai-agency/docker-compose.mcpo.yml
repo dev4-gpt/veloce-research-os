@@ -51,6 +51,7 @@ services:
       - mcpo-time
     labels:
       - traefik.enable=true
+      - traefik.docker.network=aiagency
       - traefik.http.routers.aiagency-tools.rule=Host(`tools.${DOMAIN}`)
       - traefik.http.routers.aiagency-tools.entrypoints=websecure
       - traefik.http.routers.aiagency-tools.tls.certresolver=letsencrypt

@@ -138,6 +138,20 @@ URL: https://tools.srv1314350.hstgr.cloud/openapi.json
 Auth: Bearer <MCPO_API_KEY>
 ```
 
+If Open WebUI imports the server but the model only prints a fake tool-shaped JSON response, use the native Open WebUI tool instead:
+
+```text
+https://raw.githubusercontent.com/dev4-gpt/veloce-research-os/main/tools/openwebui/mcpo_time_tool.py
+```
+
+The native tool calls:
+
+```text
+http://mcpo-openwebui-proxy:8080/get_current_time
+```
+
+It requires `MCPO_API_KEY` to be available inside the Open WebUI container.
+
 Use a model already proven to call tools:
 
 ```text

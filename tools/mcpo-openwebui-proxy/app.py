@@ -145,7 +145,7 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self) -> None:  # noqa: N802
-        if self.path == "/healthz":
+        if self.path in {"/", "/healthz", "/api/config"}:
             self._write_json(
                 200,
                 {
@@ -155,7 +155,7 @@ class Handler(BaseHTTPRequestHandler):
                 },
             )
             return
-        if self.path == "/openapi.json":
+        if self.path in {"/openapi.json", "/openapi.json/openapi.json"}:
             self._write_json(200, _openapi_spec())
             return
         self._write_json(404, {"ok": False, "error": "not found"})
