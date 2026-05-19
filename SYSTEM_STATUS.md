@@ -6,7 +6,7 @@ Date: 2026-05-18
 
 Veloce Research OS v1.1 is operational as a self-hosted research operating system running on the Hostinger VPS with Paperclip, Open WebUI, Hermes, direct NVIDIA model access, GitHub, Obsidian, and a runnable research project scaffold.
 
-The system is ready for controlled use. Hermes standalone and Hermes memory persistence are verified. Paperclip-to-Hermes execution remains deferred because Paperclip's local Hermes adapter cannot find a local `hermes` command.
+The system is ready for controlled use. Hermes standalone and Hermes memory persistence are verified. Paperclip-to-Hermes execution is verified through the HTTP wrapper path, but Hermes should not be used for exact tiny replies because its runtime context is token-heavy.
 
 V1.2 core is also verified: Open WebUI can call the `Veloce Status Check` tool through the native Open WebUI tool interface when using `openai/gpt-oss-120b`.
 
@@ -39,6 +39,7 @@ GitHub: https://github.com/dev4-gpt/veloce-research-os
 - Direct NVIDIA models work in Open WebUI for fast model calls.
 - Hermes container runs and can respond through its API.
 - Hermes memory persists across separate API requests.
+- Paperclip can call Hermes through the repository-backed HTTP wrapper.
 - Open WebUI can call the `status_check_tool` native tool.
 - `status_check_tool` verified `hermes`, `paperclip`, and `research_repo`.
 - GitHub repository is populated and is the source of truth for code.
@@ -112,7 +113,8 @@ Hermes status:
 Hermes standalone: complete
 Hermes memory persistence: complete
 Hermes token overhead: known limitation
-Paperclip -> Hermes local adapter: deferred
+Paperclip -> Hermes HTTP wrapper: complete for connectivity
+Paperclip -> Hermes exact-output testing: not recommended
 ```
 
 ## Partial or Deferred
@@ -147,7 +149,7 @@ traefik-traefik-1: running
 
 ### Paperclip to Hermes
 
-Paperclip's local Hermes adapter remains deferred, but v1.3 now has a repository-backed HTTP shim to test.
+Paperclip's local Hermes adapter remains deferred, but v1.3 has a repository-backed HTTP wrapper that works through Hermes' verified OpenAI-compatible endpoint.
 
 Reason:
 
@@ -155,10 +157,10 @@ Reason:
 The adapter tries to run a local `hermes` command inside the Paperclip runtime. That command is not available in Paperclip's PATH.
 ```
 
-Future fix:
+Verified path:
 
 ```text
-Install tools/paperclip/hermes_http_agent.mjs into /paperclip/adapters/ and test it against http://hermes:8642/v1/chat/completions with API_SERVER_KEY.
+Paperclip -> /paperclip/adapters/hermes_http_agent_env.sh -> /paperclip/adapters/hermes_http_agent.mjs -> http://hermes:8642/v1/chat/completions
 ```
 
 V1.3 shim docs:
@@ -172,17 +174,19 @@ Decision:
 ```text
 Use direct NVIDIA models for fast Open WebUI work.
 Use Hermes when agent behavior or memory is specifically needed.
-Do not rely on Paperclip's local Hermes adapter yet.
+Do not use Hermes for exact one-line acceptance tests.
+Do not rely on Paperclip's local `hermes` command adapter.
 ```
 
 ### Ruflo / MCPO
 
-Ruflo and MCPO are deferred.
+MCPO is now planned for v1.4 as the next Open WebUI tool expansion layer.
 
-Reason:
+Ruflo remains gated.
 
 ```text
-The original Ruflo Docker image was not pullable during setup.
+Start MCPO with one low-risk tool through deploy/ai-agency/docker-compose.mcpo.yml.
+Do not enable Ruflo in the default flow until MCPO works and Ruflo passes the isolation gate.
 ```
 
 ## Restart Checks
@@ -243,4 +247,6 @@ docs/v1.2-integration-plan.md
 docs/v1.2-design-review.md
 docs/status-check-tool.md
 docs/paperclip-hermes-http-agent.md
+docs/v1.4-hermes-mcpo-ruflo-plan.md
+docs/mcpo-ruflo-setup.md
 ```

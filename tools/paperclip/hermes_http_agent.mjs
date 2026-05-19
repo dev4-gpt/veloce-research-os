@@ -3,6 +3,7 @@
 const DEFAULT_BASE_URL = "http://hermes:8642/v1";
 const DEFAULT_MODEL = "hermes-agent";
 const DEFAULT_TIMEOUT_MS = 180000;
+const DEFAULT_MAX_PROMPT_CHARS = 12000;
 
 function env(name, fallback = "") {
   const value = process.env[name];
@@ -30,27 +31,31 @@ function readStdin() {
   });
 }
 
-function buildPrompt(stdinPrompt) {
+function buildPrompt(stdinPrompt, maxPromptChars) {
   const argPrompt = process.argv.slice(2).join(" ").trim();
-  const prompt = stdinPrompt || argPrompt;
+  let prompt = stdinPrompt || argPrompt;
   if (!prompt) {
     throw new Error("No prompt provided on stdin or as command arguments.");
+  }
+  if (maxPromptChars > 0 && prompt.length > maxPromptChars) {
+    const headChars = Math.floor(maxPromptChars * 0.65);
+    const tailChars = maxPromptChars - headChars;
+    prompt = [
+      prompt.slice(0, headChars),
+      `\n\n[Veloce Hermes wrapper truncated ${prompt.length - maxPromptChars} characters of Paperclip runtime context here.]\n\n`,
+      prompt.slice(prompt.length - tailChars),
+    ].join("");
   }
   return prompt;
 }
 
-function buildRequestBody(prompt, model) {
+function buildRequestBody(prompt, model, systemPrompt) {
   return {
     model,
     messages: [
       {
         role: "system",
-        content: [
-          "You are Veloce Hermes HTTP Agent.",
-          "Answer the assigned Paperclip issue directly.",
-          "If the task is complete, include a short disposition recommendation.",
-          "Do not claim that you modified Paperclip state unless the prompt includes tool output proving it.",
-        ].join(" "),
+        content: systemPrompt,
       },
       {
         role: "user",
@@ -75,7 +80,7 @@ function timeoutSignal(timeoutMs) {
   return { signal: controller.signal, clear: () => clearTimeout(timeout) };
 }
 
-async function callHermes({ prompt, baseUrl, apiKey, model, timeoutMs }) {
+async function callHermes({ prompt, baseUrl, apiKey, model, timeoutMs, systemPrompt }) {
   const endpoint = `${baseUrl.replace(/\/+$/, "")}/chat/completions`;
   const timer = timeoutSignal(timeoutMs);
   try {
@@ -85,7 +90,7 @@ async function callHermes({ prompt, baseUrl, apiKey, model, timeoutMs }) {
         "Authorization": `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(buildRequestBody(prompt, model)),
+      body: JSON.stringify(buildRequestBody(prompt, model, systemPrompt)),
       signal: timer.signal,
     });
 
@@ -139,6 +144,17 @@ async function main() {
   const apiKey = env("HERMES_API_KEY") || env("API_SERVER_KEY");
   const model = env("HERMES_MODEL", DEFAULT_MODEL);
   const timeoutMs = Number(env("HERMES_TIMEOUT_MS", String(DEFAULT_TIMEOUT_MS)));
+  const maxPromptChars = Number(env("HERMES_MAX_PROMPT_CHARS", String(DEFAULT_MAX_PROMPT_CHARS)));
+  const systemPrompt = env(
+    "HERMES_SYSTEM_PROMPT",
+    [
+      "You are Veloce Hermes HTTP Agent.",
+      "Answer the assigned Paperclip issue directly and briefly.",
+      "Do not create or delegate recovery issues.",
+      "If the bridge worked, say so and recommend the issue be marked done.",
+      "Do not claim that you modified Paperclip state unless the prompt includes tool output proving it.",
+    ].join(" "),
+  );
 
   try {
     if (!apiKey) {
@@ -147,8 +163,11 @@ async function main() {
     if (!Number.isFinite(timeoutMs) || timeoutMs < 1000) {
       throw new Error("HERMES_TIMEOUT_MS must be a number >= 1000.");
     }
-    const prompt = buildPrompt(await readStdin());
-    const result = await callHermes({ prompt, baseUrl, apiKey, model, timeoutMs });
+    if (!Number.isFinite(maxPromptChars) || maxPromptChars < 0) {
+      throw new Error("HERMES_MAX_PROMPT_CHARS must be a number >= 0.");
+    }
+    const prompt = buildPrompt(await readStdin(), maxPromptChars);
+    const result = await callHermes({ prompt, baseUrl, apiKey, model, timeoutMs, systemPrompt });
     printSuccess({ model, baseUrl, result });
   } catch (error) {
     printFailure(error, { model, baseUrl });
