@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+import socket
 import sys
 import time
 import urllib.error
@@ -10,6 +11,7 @@ import urllib.request
 import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
+from urllib.parse import urlparse
 
 
 PORT = int(os.environ.get("PORT", "8080"))
@@ -176,6 +178,30 @@ def _http_probe(name: str, url: str, timeout: float = 3.0) -> dict[str, Any]:
         }
 
 
+def _tcp_probe(name: str, url: str, timeout: float = 1.0) -> dict[str, Any]:
+    started = time.time()
+    try:
+        parsed = urlparse(url)
+        host = parsed.hostname
+        if not host:
+            raise ValueError(f"missing host in {url}")
+        port = parsed.port or (443 if parsed.scheme == "https" else 80)
+        with socket.create_connection((host, port), timeout=timeout):
+            return {
+                "ok": True,
+                "status": "tcp_open",
+                "latency_ms": int((time.time() - started) * 1000),
+                "detail": f"TCP connection to {host}:{port} succeeded",
+            }
+    except Exception as exc:
+        return {
+            "ok": False,
+            "status": None,
+            "latency_ms": int((time.time() - started) * 1000),
+            "detail": f"{name} check failed: {type(exc).__name__}: {exc}",
+        }
+
+
 def _read_git_commit(repo_path: Path) -> dict[str, Any]:
     git_dir = repo_path / ".git"
     head_path = git_dir / "HEAD"
@@ -218,7 +244,7 @@ def _read_git_commit(repo_path: Path) -> dict[str, Any]:
 def _stack_status() -> dict[str, Any]:
     trace_id = str(uuid.uuid4())
     checks = {
-        "openwebui": _http_probe("openwebui", f"{OPENWEBUI_URL}/api/version"),
+        "openwebui": _tcp_probe("openwebui", OPENWEBUI_URL),
         "hermes": _http_probe("hermes", f"{HERMES_URL}/health"),
         "paperclip": _http_probe("paperclip", PAPERCLIP_URL),
         "mcpo": _http_probe("mcpo", f"{MCPO_BASE_URL}/docs"),

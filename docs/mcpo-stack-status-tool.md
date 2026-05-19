@@ -27,12 +27,16 @@ deploy/ai-agency/docker-compose.mcpo.yml
 Fixed allowlist only:
 
 ```text
-openwebui -> http://openwebui:8080/api/version
+openwebui -> TCP probe for http://openwebui:8080
 hermes -> http://hermes:8642/health
 paperclip -> http://paperclip-iraj-paperclip-1:3100
 mcpo -> http://mcpo-time:8000/docs
 research_repo -> read-only /workspace/veloce-research-os/.git metadata
 ```
+
+The Open WebUI check intentionally uses a TCP probe instead of calling
+`/api/version`. When Open WebUI invokes this tool, an HTTP self-check can time
+out because Open WebUI is waiting for the tool response.
 
 ## VPS Install
 
