@@ -13,6 +13,7 @@ docs/
   setup-log.md
   status-check-tool.md
   v1.4-hermes-mcpo-ruflo-plan.md
+  v1.5-mcpo-ruflo-orchestration.md
 artifacts/
   primary/
   audit/
@@ -37,6 +38,7 @@ tools/
 5. For the first Open WebUI tool, read `docs/status-check-tool.md`.
 6. For the v1.3 Paperclip-to-Hermes bridge, read `docs/paperclip-hermes-http-agent.md`.
 7. For Hermes token control plus MCPO/Ruflo expansion, read `docs/v1.4-hermes-mcpo-ruflo-plan.md`.
+8. For the next MCPO and Ruflo orchestration path, read `docs/v1.5-mcpo-ruflo-orchestration.md`.
 
 ## Flagship Project
 
@@ -74,4 +76,4 @@ make aggregate-sample
 
 Planning artifacts are complete and synced from Paperclip/Obsidian. The project scaffold is intentionally minimal and runnable; real benchmark adapters are the next implementation layer.
 
-For the deployed service flow, v1.1 verifies Paperclip, Open WebUI, Hermes standalone, Hermes memory, GitHub, VPS, and Obsidian. V1.2 adds the Open WebUI status tool. V1.3 verifies the Paperclip-to-Hermes HTTP wrapper without relying on the broken local `hermes` command. V1.4 adds token-control rules and starts MCPO behind a safe single-tool gate plus an Open WebUI-compatible proxy before any Ruflo production use.
+For the deployed service flow, v1.1 verifies Paperclip, Open WebUI, Hermes standalone, Hermes memory, GitHub, VPS, and Obsidian. V1.2 adds the Open WebUI status tool. V1.3 verifies the Paperclip-to-Hermes HTTP wrapper without relying on the broken local `hermes` command. V1.4 verifies MCPO through a safe time tool. V1.5 expands MCPO with read-only tools and evaluates Ruflo only as an isolated orchestration sandbox.

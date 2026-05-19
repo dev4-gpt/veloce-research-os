@@ -10,7 +10,7 @@ The system is ready for controlled use. Hermes standalone and Hermes memory pers
 
 V1.2 core is verified: Open WebUI can call the `Veloce Status Check` tool through the native Open WebUI tool interface when using `openai/gpt-oss-120b`.
 
-V1.4 MCPO core is verified: `mcpo-time` runs on the internal `aiagency` Docker network, exposes an OpenAPI schema, and successfully calls the MCP time tool through HTTP.
+V1.4 MCPO core is verified: `mcpo-time` runs on the internal `aiagency` Docker network, exposes an OpenAPI schema, and successfully calls the MCP time tool through HTTP. Open WebUI chat also invoked the MCPO time bridge through the native `Veloce MCPO Time` tool, with proxy logs showing `POST /get_current_time HTTP/1.1 200`.
 
 ## Service URLs
 
@@ -48,6 +48,8 @@ GitHub: https://github.com/dev4-gpt/veloce-research-os
 - MCPO exposes `/docs`, `/openapi.json`, `/get_current_time`, and `/convert_time` internally.
 - Open WebUI should import MCPO through the proxy at `https://tools.srv1314350.hstgr.cloud/openapi.json`.
 - MCPO `get_current_time` returned valid `America/New_York` time JSON.
+- Open WebUI native tool `Veloce MCPO Time` is installed and verified from chat.
+- V1.5 next MCPO additions should be read-only tools: `stack_status`, `repo_status`, and `artifact_index`.
 - GitHub repository is populated and is the source of truth for code.
 - VPS can pull and run the GitHub repository.
 - Obsidian contains the exported research artifacts and operating notes.
@@ -203,11 +205,11 @@ Verified direct tool call:
 {"timezone":"America/New_York","datetime":"2026-05-19T00:06:22-04:00","day_of_week":"Tuesday","is_dst":true}
 ```
 
-Ruflo remains gated.
+Ruflo remains gated as an orchestration sandbox.
 
 ```text
 Do not enable Ruflo in the default flow until it passes the isolation gate.
-Ruflo should be evaluated as an isolated experiment, not connected to production Paperclip issues.
+Ruflo should be evaluated as an isolated planning/orchestration experiment, not connected to production Paperclip issues, GitHub writes, or VPS infrastructure mutation.
 ```
 
 ## Restart Checks
@@ -258,6 +260,10 @@ If a Paperclip agent says it cannot access `/root/veloce-research-os`, complete 
 - [x] Verify MCPO `/docs` returns HTTP 200.
 - [x] Verify MCPO `/openapi.json` exposes time tool paths.
 - [x] Verify MCPO `/get_current_time` returns New York time JSON.
+- [x] Verify Open WebUI chat can invoke the MCPO time bridge and produce proxy log proof.
+- [ ] Add MCPO read-only `stack_status` tool.
+- [ ] Add MCPO read-only `repo_status` tool.
+- [ ] Evaluate Ruflo in isolated planning-only sandbox.
 
 ## Recommended V1.3 Task
 
