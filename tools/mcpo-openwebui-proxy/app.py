@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 import socket
+import subprocess
 import sys
 import time
 import urllib.error
@@ -70,6 +71,32 @@ def _openapi_spec() -> dict[str, Any]:
                     "responses": {
                         "200": {
                             "description": "Stack status result",
+                            "content": {"application/json": {"schema": {"type": "object"}}},
+                        },
+                        "401": {"description": "Unauthorized"},
+                    },
+                }
+            },
+            "/repo_status": {
+                "post": {
+                    "operationId": "repo_status",
+                    "summary": "Check read-only Veloce research repository status.",
+                    "security": [{"bearerAuth": []}],
+                    "requestBody": {
+                        "required": False,
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {},
+                                    "additionalProperties": False,
+                                }
+                            }
+                        },
+                    },
+                    "responses": {
+                        "200": {
+                            "description": "Repository status result",
                             "content": {"application/json": {"schema": {"type": "object"}}},
                         },
                         "401": {"description": "Unauthorized"},
@@ -241,6 +268,99 @@ def _read_git_commit(repo_path: Path) -> dict[str, Any]:
     }
 
 
+def _run_git(repo_path: Path, args: list[str], timeout: float = 3.0) -> str:
+    env = os.environ.copy()
+    env["GIT_OPTIONAL_LOCKS"] = "0"
+    result = subprocess.run(
+        ["git", "-C", str(repo_path), *args],
+        check=True,
+        capture_output=True,
+        env=env,
+        text=True,
+        timeout=timeout,
+    )
+    return result.stdout.strip()
+
+
+def _repo_status() -> dict[str, Any]:
+    trace_id = str(uuid.uuid4())
+    started = time.time()
+
+    if not RESEARCH_REPO_PATH.exists():
+        return {
+            "ok": False,
+            "service": "veloce_repo_status",
+            "checked_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "trace_id": trace_id,
+            "path": str(RESEARCH_REPO_PATH),
+            "detail": "research repository path is not mounted",
+        }
+
+    try:
+        branch = _run_git(RESEARCH_REPO_PATH, ["rev-parse", "--abbrev-ref", "HEAD"])
+        commit = _run_git(RESEARCH_REPO_PATH, ["rev-parse", "HEAD"])
+        short_commit = _run_git(RESEARCH_REPO_PATH, ["rev-parse", "--short", "HEAD"])
+        dirty_lines = _run_git(
+            RESEARCH_REPO_PATH,
+            ["status", "--porcelain=v1", "--untracked-files=normal"],
+        ).splitlines()
+        last_commit = _run_git(
+            RESEARCH_REPO_PATH,
+            ["log", "-1", "--pretty=format:%h%x09%s%x09%cI"],
+        )
+    except FileNotFoundError:
+        fallback = _read_git_commit(RESEARCH_REPO_PATH)
+        fallback.update(
+            {
+                "service": "veloce_repo_status",
+                "checked_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                "trace_id": trace_id,
+                "dirty": None,
+                "dirty_detail": "git binary is not installed in the proxy image",
+            }
+        )
+        return fallback
+    except subprocess.CalledProcessError as exc:
+        return {
+            "ok": False,
+            "service": "veloce_repo_status",
+            "checked_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "trace_id": trace_id,
+            "path": str(RESEARCH_REPO_PATH),
+            "detail": exc.stderr.strip() or str(exc),
+        }
+    except Exception as exc:
+        return {
+            "ok": False,
+            "service": "veloce_repo_status",
+            "checked_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "trace_id": trace_id,
+            "path": str(RESEARCH_REPO_PATH),
+            "detail": f"{type(exc).__name__}: {exc}",
+        }
+
+    return {
+        "ok": True,
+        "service": "veloce_repo_status",
+        "checked_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "trace_id": trace_id,
+        "path": str(RESEARCH_REPO_PATH),
+        "branch": branch,
+        "commit": commit,
+        "short_commit": short_commit,
+        "dirty": bool(dirty_lines),
+        "dirty_count": len(dirty_lines),
+        "dirty_paths": dirty_lines[:30],
+        "last_commit": last_commit,
+        "latency_ms": int((time.time() - started) * 1000),
+        "verification_hints": [
+            "cd /root/veloce-research-os && git rev-parse --short HEAD",
+            "cd /root/veloce-research-os && git status --short",
+            "cd /root/veloce-research-os && git log -1 --oneline",
+        ],
+    }
+
+
 def _stack_status() -> dict[str, Any]:
     trace_id = str(uuid.uuid4())
     checks = {
@@ -307,7 +427,12 @@ class Handler(BaseHTTPRequestHandler):
         self._write_json(404, {"ok": False, "error": "not found"})
 
     def do_POST(self) -> None:  # noqa: N802
-        if self.path not in {"/stack_status", "/get_current_time", "/convert_time"}:
+        if self.path not in {
+            "/stack_status",
+            "/repo_status",
+            "/get_current_time",
+            "/convert_time",
+        }:
             self._write_json(404, {"ok": False, "error": "not found"})
             return
 
@@ -318,6 +443,9 @@ class Handler(BaseHTTPRequestHandler):
 
         if self.path == "/stack_status":
             self._write_json(200, _stack_status())
+            return
+        if self.path == "/repo_status":
+            self._write_json(200, _repo_status())
             return
 
         length = int(self.headers.get("content-length", "0"))

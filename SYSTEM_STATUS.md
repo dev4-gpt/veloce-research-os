@@ -4,13 +4,15 @@ Date: 2026-05-19
 
 ## Summary
 
-Veloce Research OS v1.4 is operational as a self-hosted research operating system running on the Hostinger VPS with Paperclip, Open WebUI, Hermes, direct NVIDIA model access, GitHub, Obsidian, a runnable research project scaffold, the native Open WebUI status tool, and a verified MCPO time bridge.
+Veloce Research OS v1.5 is operational as a self-hosted research operating system running on the Hostinger VPS with Paperclip, Open WebUI, Hermes, direct NVIDIA model access, GitHub, Obsidian, a runnable research project scaffold, the native Open WebUI status tool, a verified MCPO time bridge, and the read-only MCPO stack status path.
 
 The system is ready for controlled use. Hermes standalone and Hermes memory persistence are verified. Paperclip-to-Hermes execution is verified through the HTTP wrapper path, but Hermes should not be used for exact tiny replies because its runtime context is token-heavy.
 
 V1.2 core is verified: Open WebUI can call the `Veloce Status Check` tool through the native Open WebUI tool interface when using `openai/gpt-oss-120b`.
 
 V1.4 MCPO core is verified: `mcpo-time` runs on the internal `aiagency` Docker network, exposes an OpenAPI schema, and successfully calls the MCP time tool through HTTP. Open WebUI chat also invoked the MCPO time bridge through the native `Veloce MCPO Time` tool, with proxy logs showing `POST /get_current_time HTTP/1.1 200`.
+
+V1.5A is verified: Open WebUI invoked `Veloce MCPO Stack`, the proxy returned live stack JSON, and the response showed `openwebui.status = tcp_open`.
 
 ## Service URLs
 
@@ -50,7 +52,8 @@ GitHub: https://github.com/dev4-gpt/veloce-research-os
 - MCPO `get_current_time` returned valid `America/New_York` time JSON.
 - Open WebUI native tool `Veloce MCPO Time` is installed and verified from chat.
 - V1.5 repo support exists for read-only `stack_status`.
-- V1.5 next MCPO additions after stack status should be read-only tools: `repo_status` and `artifact_index`.
+- V1.5 repo support exists for read-only `repo_status`.
+- V1.5 next MCPO addition after repo status should be read-only `artifact_index`.
 - GitHub repository is populated and is the source of truth for code.
 - VPS can pull and run the GitHub repository.
 - Obsidian contains the exported research artifacts and operating notes.
@@ -213,6 +216,12 @@ Do not enable Ruflo in the default flow until it passes the isolation gate.
 Ruflo should be evaluated as an isolated planning/orchestration experiment, not connected to production Paperclip issues, GitHub writes, or VPS infrastructure mutation.
 ```
 
+Current Ruflo sandbox docs:
+
+```text
+docs/ruflo-sandbox-evaluation.md
+```
+
 ## Restart Checks
 
 Infrastructure stack:
@@ -262,9 +271,9 @@ If a Paperclip agent says it cannot access `/root/veloce-research-os`, complete 
 - [x] Verify MCPO `/openapi.json` exposes time tool paths.
 - [x] Verify MCPO `/get_current_time` returns New York time JSON.
 - [x] Verify Open WebUI chat can invoke the MCPO time bridge and produce proxy log proof.
-- [ ] Deploy and verify MCPO read-only `stack_status` tool.
-- [ ] Add MCPO read-only `repo_status` tool.
-- [ ] Evaluate Ruflo in isolated planning-only sandbox.
+- [x] Deploy and verify MCPO read-only `stack_status` tool.
+- [ ] Deploy and verify MCPO read-only `repo_status` tool.
+- [ ] Evaluate Ruflo in isolated planning-only sandbox after human approval.
 
 ## Recommended V1.3 Task
 
@@ -281,4 +290,7 @@ docs/status-check-tool.md
 docs/paperclip-hermes-http-agent.md
 docs/v1.4-hermes-mcpo-ruflo-plan.md
 docs/mcpo-ruflo-setup.md
+docs/mcpo-stack-status-tool.md
+docs/mcpo-repo-status-tool.md
+docs/ruflo-sandbox-evaluation.md
 ```

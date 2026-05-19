@@ -13,6 +13,8 @@ docs/
   setup-log.md
   status-check-tool.md
   mcpo-stack-status-tool.md
+  mcpo-repo-status-tool.md
+  ruflo-sandbox-evaluation.md
   v1.4-hermes-mcpo-ruflo-plan.md
   v1.5-mcpo-ruflo-orchestration.md
 artifacts/
@@ -41,6 +43,8 @@ tools/
 7. For Hermes token control plus MCPO/Ruflo expansion, read `docs/v1.4-hermes-mcpo-ruflo-plan.md`.
 8. For the next MCPO and Ruflo orchestration path, read `docs/v1.5-mcpo-ruflo-orchestration.md`.
 9. For the first read-only MCPO status expansion, read `docs/mcpo-stack-status-tool.md`.
+10. For the read-only repository status tool, read `docs/mcpo-repo-status-tool.md`.
+11. For the Ruflo planning-only sandbox gate, read `docs/ruflo-sandbox-evaluation.md`.
 
 ## Flagship Project
 
