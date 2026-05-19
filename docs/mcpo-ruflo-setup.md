@@ -10,6 +10,15 @@
 
 Open WebUI documents MCPO as the bridge for exposing stdio/SSE MCP servers through OpenAPI-compatible HTTP endpoints. This matters because Open WebUI already worked with the native `Veloce Status Check` tool, so MCPO is the next safe expansion layer.
 
+Status as of 2026-05-19:
+
+```text
+Verified on VPS.
+Container: aiagency-mcpo-time
+Internal URL: http://mcpo-time:8000/openapi.json
+OpenAPI paths: /get_current_time, /convert_time
+```
+
 ### First Tool
 
 Start with:
@@ -64,6 +73,35 @@ docker run --rm --network aiagency curlimages/curl:8.10.1 \
   -H "Authorization: Bearer $MCPO_API_KEY"
 ```
 
+Verified VPS result:
+
+```text
+GET /docs -> HTTP/1.1 200 OK
+GET /openapi.json -> title mcpo-time, paths /get_current_time and /convert_time
+POST /get_current_time with {"timezone":"America/New_York"} returned valid JSON time data
+```
+
+Verified direct call:
+
+```bash
+docker run --rm --network aiagency curlimages/curl:8.10.1 \
+  -sS -X POST http://mcpo-time:8000/get_current_time \
+  -H "Authorization: Bearer $MCPO_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"timezone":"America/New_York"}'
+```
+
+Observed response shape:
+
+```json
+{
+  "timezone": "America/New_York",
+  "datetime": "2026-05-19T00:06:22-04:00",
+  "day_of_week": "Tuesday",
+  "is_dst": true
+}
+```
+
 ### Open WebUI Registration
 
 In Open WebUI:
@@ -89,6 +127,13 @@ Use the MCPO time tool to get the current time for America/New_York. Return only
 ## Ruflo
 
 Ruflo is a multi-agent orchestration platform with MCP/tooling support. It should be treated as an experiment after MCPO works, not as a replacement for the stable Veloce flow.
+
+Current decision:
+
+```text
+Do not attach Ruflo to production Paperclip or Open WebUI flows yet.
+Evaluate Ruflo in isolation only after Open WebUI successfully invokes the MCPO time tool from chat.
+```
 
 ### Ruflo Gate
 

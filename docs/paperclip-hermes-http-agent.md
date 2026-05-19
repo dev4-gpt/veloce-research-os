@@ -163,6 +163,27 @@ Use HERMES_MAX_PROMPT_CHARS to cap issue context.
 Do not keep retrying successful Hermes runs just because the answer was not an exact phrase.
 ```
 
+VPS update on 2026-05-19:
+
+```text
+The wrapper and env file were refreshed on the VPS.
+HERMES_MAX_PROMPT_CHARS is set to 12000.
+HERMES_SYSTEM_PROMPT tells Hermes to answer briefly and avoid recovery issue creation.
+An attempted exact-output wrapper test was interrupted because Hermes remained too slow for a tiny confirmation.
+This reinforces the operating rule: Hermes is for memory/agent behavior, not exact one-line smoke tests.
+```
+
+Correct Docker exec option order:
+
+```bash
+docker exec -i \
+  -e HERMES_FIXED_PROMPT='Reply with exactly: Hermes lightweight wrapper verified' \
+  paperclip-iraj-paperclip-1 \
+  /paperclip/adapters/hermes_http_agent_env.sh
+```
+
+Do not put `-e` after the container name; Docker will try to run `-e` as the container command.
+
 ## Safety Rules
 
 - Do not expose this script as a general shell tool.

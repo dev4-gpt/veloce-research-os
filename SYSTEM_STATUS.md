@@ -1,14 +1,16 @@
 # Veloce Research OS System Status
 
-Date: 2026-05-18
+Date: 2026-05-19
 
 ## Summary
 
-Veloce Research OS v1.1 is operational as a self-hosted research operating system running on the Hostinger VPS with Paperclip, Open WebUI, Hermes, direct NVIDIA model access, GitHub, Obsidian, and a runnable research project scaffold.
+Veloce Research OS v1.4 is operational as a self-hosted research operating system running on the Hostinger VPS with Paperclip, Open WebUI, Hermes, direct NVIDIA model access, GitHub, Obsidian, a runnable research project scaffold, the native Open WebUI status tool, and a verified MCPO time bridge.
 
 The system is ready for controlled use. Hermes standalone and Hermes memory persistence are verified. Paperclip-to-Hermes execution is verified through the HTTP wrapper path, but Hermes should not be used for exact tiny replies because its runtime context is token-heavy.
 
-V1.2 core is also verified: Open WebUI can call the `Veloce Status Check` tool through the native Open WebUI tool interface when using `openai/gpt-oss-120b`.
+V1.2 core is verified: Open WebUI can call the `Veloce Status Check` tool through the native Open WebUI tool interface when using `openai/gpt-oss-120b`.
+
+V1.4 MCPO core is verified: `mcpo-time` runs on the internal `aiagency` Docker network, exposes an OpenAPI schema, and successfully calls the MCP time tool through HTTP.
 
 ## Service URLs
 
@@ -42,6 +44,9 @@ GitHub: https://github.com/dev4-gpt/veloce-research-os
 - Paperclip can call Hermes through the repository-backed HTTP wrapper.
 - Open WebUI can call the `status_check_tool` native tool.
 - `status_check_tool` verified `hermes`, `paperclip`, and `research_repo`.
+- MCPO is running as `aiagency-mcpo-time`.
+- MCPO exposes `/docs`, `/openapi.json`, `/get_current_time`, and `/convert_time` internally.
+- MCPO `get_current_time` returned valid `America/New_York` time JSON.
 - GitHub repository is populated and is the source of truth for code.
 - VPS can pull and run the GitHub repository.
 - Obsidian contains the exported research artifacts and operating notes.
@@ -180,13 +185,28 @@ Do not rely on Paperclip's local `hermes` command adapter.
 
 ### Ruflo / MCPO
 
-MCPO is now planned for v1.4 as the next Open WebUI tool expansion layer.
+MCPO is verified for v1.4 as the next Open WebUI tool expansion layer.
+
+Verified service:
+
+```text
+aiagency-mcpo-time: healthy
+Internal URL: http://mcpo-time:8000/openapi.json
+Auth: Authorization: Bearer <MCPO_API_KEY>
+Paths: /get_current_time, /convert_time
+```
+
+Verified direct tool call:
+
+```json
+{"timezone":"America/New_York","datetime":"2026-05-19T00:06:22-04:00","day_of_week":"Tuesday","is_dst":true}
+```
 
 Ruflo remains gated.
 
 ```text
-Start MCPO with one low-risk tool through deploy/ai-agency/docker-compose.mcpo.yml.
-Do not enable Ruflo in the default flow until MCPO works and Ruflo passes the isolation gate.
+Do not enable Ruflo in the default flow until it passes the isolation gate.
+Ruflo should be evaluated as an isolated experiment, not connected to production Paperclip issues.
 ```
 
 ## Restart Checks
@@ -233,6 +253,10 @@ If a Paperclip agent says it cannot access `/root/veloce-research-os`, complete 
 - [x] Verify Hermes memory persistence.
 - [x] Verify Open WebUI and Hermes containers are running.
 - [x] Verify `reliability-policy-matrix` tests pass on the VPS.
+- [x] Verify MCPO time bridge container is healthy.
+- [x] Verify MCPO `/docs` returns HTTP 200.
+- [x] Verify MCPO `/openapi.json` exposes time tool paths.
+- [x] Verify MCPO `/get_current_time` returns New York time JSON.
 
 ## Recommended V1.3 Task
 
