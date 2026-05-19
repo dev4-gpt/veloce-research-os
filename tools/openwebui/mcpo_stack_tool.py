@@ -11,9 +11,12 @@ import urllib.request
 
 
 class Tools:
-    async def stack_status(self) -> str:
+    async def stack_status(self, scope: str = "all") -> str:
         """
         Get read-only health/status for the Veloce stack.
+
+        Args:
+            scope: Status scope. Use "all" for the full Veloce stack.
         """
         api_key = os.environ.get("MCPO_API_KEY", "")
         if not api_key:

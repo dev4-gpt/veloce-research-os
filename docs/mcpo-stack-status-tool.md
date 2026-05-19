@@ -94,7 +94,7 @@ Then in a chat:
 ```
 
 ```text
-Use Veloce MCPO Stack to run stack_status. Return only the raw JSON.
+Use Veloce MCPO Stack to run stack_status with scope="all". Return only the raw JSON.
 ```
 
 Proof of real execution is not the model response alone. Confirm with:
@@ -108,4 +108,3 @@ Look for:
 ```text
 POST /stack_status HTTP/1.1" 200
 ```
-
