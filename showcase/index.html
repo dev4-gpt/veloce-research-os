@@ -1,0 +1,640 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Veloce Research OS is an agentic control layer that turns OpenWebUI into a governed production operations cockpit."
+    />
+    <title>Veloce Research OS</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #090b0d;
+        --ink: #f5f7f2;
+        --muted: #aab4ac;
+        --line: rgba(245, 247, 242, 0.14);
+        --panel: rgba(15, 19, 20, 0.88);
+        --panel-2: rgba(22, 28, 28, 0.9);
+        --green: #77e0a2;
+        --cyan: #6ed6df;
+        --amber: #e9b765;
+        --red: #ef7f74;
+        --blue: #91b4ff;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+        line-height: 1.55;
+      }
+
+      a {
+        color: inherit;
+      }
+
+      .hero {
+        position: relative;
+        min-height: 92vh;
+        display: grid;
+        align-items: end;
+        overflow: hidden;
+        border-bottom: 1px solid var(--line);
+      }
+
+      #network {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        background:
+          radial-gradient(circle at 18% 18%, rgba(119, 224, 162, 0.18), transparent 28%),
+          radial-gradient(circle at 80% 28%, rgba(110, 214, 223, 0.16), transparent 26%),
+          linear-gradient(145deg, #07090a 0%, #111717 55%, #080a0c 100%);
+      }
+
+      .hero::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(to top, rgba(9, 11, 13, 0.98), rgba(9, 11, 13, 0.46) 54%, rgba(9, 11, 13, 0.1)),
+          repeating-linear-gradient(to bottom, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.03) 1px, transparent 1px, transparent 6px);
+        pointer-events: none;
+      }
+
+      .nav {
+        position: absolute;
+        z-index: 2;
+        inset: 0 0 auto 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 22px clamp(18px, 4vw, 58px);
+        color: rgba(245, 247, 242, 0.9);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 700;
+        letter-spacing: 0;
+      }
+
+      .mark {
+        width: 28px;
+        height: 28px;
+        display: grid;
+        place-items: center;
+        border: 1px solid rgba(119, 224, 162, 0.55);
+        background: rgba(119, 224, 162, 0.1);
+        color: var(--green);
+        border-radius: 6px;
+        font-size: 14px;
+      }
+
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 22px;
+        font-size: 14px;
+      }
+
+      .nav-links a {
+        text-decoration: none;
+        color: rgba(245, 247, 242, 0.74);
+      }
+
+      .hero-content {
+        position: relative;
+        z-index: 1;
+        width: min(1180px, calc(100% - 36px));
+        margin: 0 auto;
+        padding: 120px 0 56px;
+      }
+
+      .eyebrow {
+        color: var(--green);
+        text-transform: uppercase;
+        font-size: 13px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+      }
+
+      h1 {
+        max-width: 980px;
+        margin: 14px 0 18px;
+        font-size: clamp(48px, 8vw, 112px);
+        line-height: 0.93;
+        letter-spacing: 0;
+      }
+
+      .lede {
+        max-width: 760px;
+        color: rgba(245, 247, 242, 0.78);
+        font-size: clamp(18px, 2vw, 24px);
+        margin: 0 0 30px;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 42px;
+      }
+
+      .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        padding: 0 18px;
+        border-radius: 6px;
+        border: 1px solid var(--line);
+        text-decoration: none;
+        font-weight: 750;
+        color: var(--ink);
+        background: rgba(245, 247, 242, 0.08);
+      }
+
+      .button.primary {
+        color: #06100a;
+        background: var(--green);
+        border-color: var(--green);
+      }
+
+      .hero-proof {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+        max-width: 980px;
+      }
+
+      .metric {
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(9, 11, 13, 0.72);
+        backdrop-filter: blur(10px);
+      }
+
+      .metric strong {
+        display: block;
+        font-size: 20px;
+      }
+
+      .metric span {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      main {
+        background: #0b0e10;
+      }
+
+      section {
+        border-bottom: 1px solid var(--line);
+      }
+
+      .wrap {
+        width: min(1180px, calc(100% - 36px));
+        margin: 0 auto;
+        padding: 78px 0;
+      }
+
+      .section-head {
+        display: grid;
+        grid-template-columns: minmax(0, 0.85fr) minmax(260px, 1fr);
+        gap: 50px;
+        align-items: start;
+        margin-bottom: 34px;
+      }
+
+      h2 {
+        margin: 0;
+        font-size: clamp(32px, 4vw, 56px);
+        line-height: 1.02;
+        letter-spacing: 0;
+      }
+
+      .section-head p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 18px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .card {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        padding: 22px;
+        min-height: 190px;
+      }
+
+      .card h3 {
+        margin: 0 0 10px;
+        font-size: 19px;
+        letter-spacing: 0;
+      }
+
+      .card p,
+      .card li {
+        color: var(--muted);
+      }
+
+      .card p {
+        margin: 0;
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        min-height: 24px;
+        padding: 0 9px;
+        margin-bottom: 14px;
+        border-radius: 999px;
+        border: 1px solid rgba(119, 224, 162, 0.34);
+        color: var(--green);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .flow {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 10px;
+        align-items: stretch;
+      }
+
+      .step {
+        position: relative;
+        min-height: 138px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 16px;
+        background: var(--panel-2);
+      }
+
+      .step::after {
+        content: "→";
+        position: absolute;
+        right: -12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: rgba(245, 247, 242, 0.35);
+      }
+
+      .step:last-child::after {
+        content: "";
+      }
+
+      .step b {
+        display: block;
+        margin-bottom: 8px;
+      }
+
+      .step span {
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .code {
+        margin: 0;
+        padding: 20px;
+        overflow: auto;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        background: #07090a;
+        color: #d8e7dc;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        font-size: 14px;
+      }
+
+      .split {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+
+      .status {
+        display: grid;
+        gap: 10px;
+      }
+
+      .row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        padding: 14px 16px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(245, 247, 242, 0.04);
+      }
+
+      .row span {
+        color: var(--muted);
+      }
+
+      .pass {
+        color: var(--green);
+        font-weight: 800;
+      }
+
+      .private {
+        color: var(--amber);
+        font-weight: 800;
+      }
+
+      .footer {
+        padding: 40px 0;
+        color: var(--muted);
+      }
+
+      .footer .wrap {
+        padding: 0;
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+      }
+
+      @media (max-width: 920px) {
+        .nav-links {
+          display: none;
+        }
+
+        .hero-proof,
+        .grid,
+        .split,
+        .section-head {
+          grid-template-columns: 1fr;
+        }
+
+        .flow {
+          grid-template-columns: 1fr;
+        }
+
+        .step::after {
+          content: "↓";
+          right: 18px;
+          top: auto;
+          bottom: -20px;
+          transform: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="hero">
+      <canvas id="network" aria-hidden="true"></canvas>
+      <nav class="nav" aria-label="Primary">
+        <div class="brand"><span class="mark">V</span> Veloce Research OS</div>
+        <div class="nav-links">
+          <a href="#architecture">Architecture</a>
+          <a href="#proof">Proof</a>
+          <a href="#reproduce">Reproduce</a>
+          <a href="https://github.com/dev4-gpt/veloce-research-os">GitHub</a>
+        </div>
+      </nav>
+      <div class="hero-content">
+        <div class="eyebrow">Agentic operations for real production systems</div>
+        <h1>OpenWebUI as a governed AI command cockpit.</h1>
+        <p class="lede">
+          Veloce Research OS connects OpenWebUI, Hermes, Ruflo, Paperclip, MCPO tools, GitHub, and VPS verification into a controlled agentic workflow with memory, planning, policy, rollback, and evidence.
+        </p>
+        <div class="actions">
+          <a class="button primary" href="https://github.com/dev4-gpt/veloce-research-os">View repository</a>
+          <a class="button" href="#reproduce">Run the proof</a>
+          <a class="button" href="#roadmap">See roadmap</a>
+        </div>
+        <div class="hero-proof" aria-label="Current proof points">
+          <div class="metric"><strong>v1.9A-C</strong><span>OpenWebUI + Hermes + Ruflo tools deployed</span></div>
+          <div class="metric"><strong>Traceable</strong><span>Tool calls return JSON evidence and trace IDs</span></div>
+          <div class="metric"><strong>Governed</strong><span>Dry-run orchestration before live writes</span></div>
+          <div class="metric"><strong>Reproducible</strong><span>Runbooks, tests, and Make targets in GitHub</span></div>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section id="architecture">
+        <div class="wrap">
+          <div class="section-head">
+            <h2>The system is a control loop, not a chatbot.</h2>
+            <p>
+              The model never needs raw production access. It calls named, auditable capabilities through MCPO, and every serious action can be planned, checked, verified, and recorded.
+            </p>
+          </div>
+          <div class="flow" aria-label="Veloce control loop">
+            <div class="step"><b>Chat</b><span>Operator works inside OpenWebUI.</span></div>
+            <div class="step"><b>Tools</b><span>Veloce Agentic Control calls MCPO endpoints.</span></div>
+            <div class="step"><b>Memory</b><span>Hermes provides agent reasoning and memory bridge.</span></div>
+            <div class="step"><b>Plan</b><span>Ruflo produces task graphs and worker packets.</span></div>
+            <div class="step"><b>Policy</b><span>Capability broker permits or denies action classes.</span></div>
+            <div class="step"><b>Verify</b><span>VPS checks prove health, rollback, and readiness.</span></div>
+            <div class="step"><b>Evidence</b><span>GitHub and Paperclip preserve closeout trails.</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="wrap">
+          <div class="grid">
+            <article class="card">
+              <span class="tag">Cockpit</span>
+              <h3>OpenWebUI</h3>
+              <p>The operator-facing interface where humans ask for stack checks, memory queries, orchestration plans, and execution packets.</p>
+            </article>
+            <article class="card">
+              <span class="tag">Gateway</span>
+              <h3>MCPO Proxy</h3>
+              <p>A safe HTTP tool gateway that exposes only selected endpoints for OpenWebUI and keeps raw production access out of the model path.</p>
+            </article>
+            <article class="card">
+              <span class="tag">Memory</span>
+              <h3>Hermes</h3>
+              <p>The reasoning and memory layer for project state, research context, and agent behavior experiments.</p>
+            </article>
+            <article class="card">
+              <span class="tag">Planner</span>
+              <h3>Ruflo</h3>
+              <p>A governed orchestration planner that returns task graphs and worker packets while runtime execution stays disabled until gates pass.</p>
+            </article>
+            <article class="card">
+              <span class="tag">Ledger</span>
+              <h3>Paperclip</h3>
+              <p>The task and evidence ledger for issues, dispositions, comments, closeouts, audit notes, and operator handoffs.</p>
+            </article>
+            <article class="card">
+              <span class="tag">Runtime</span>
+              <h3>VPS + GitHub</h3>
+              <p>The VPS proves service health; GitHub remains source of truth for code, docs, runbooks, tests, and deployment manifests.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="proof">
+        <div class="wrap">
+          <div class="section-head">
+            <h2>Verified proof points.</h2>
+            <p>
+              The deployed v1.9A-C milestone proves the public-safe product story: chat can inspect the stack, reach Hermes, and ask Ruflo for a governed plan without enabling uncontrolled production execution.
+            </p>
+          </div>
+          <div class="split">
+            <div class="status">
+              <div class="row"><b>OpenWebUI tool calls</b><span class="pass">PASS</span></div>
+              <div class="row"><b>MCPO OpenAPI route</b><span class="pass">PASS</span></div>
+              <div class="row"><b>Hermes dry-run bridge</b><span class="pass">PASS</span></div>
+              <div class="row"><b>Ruflo orchestration dry-run</b><span class="pass">PASS</span></div>
+              <div class="row"><b>Stack status visibility</b><span class="pass">PASS</span></div>
+              <div class="row"><b>Live private endpoints</b><span class="private">DEMO ONLY</span></div>
+            </div>
+            <pre class="code">{
+  "service": "veloce_ruflo_orchestration_dry_run",
+  "decision": "orchestration_dry_run_ready",
+  "ruflo_runtime_invoked": false,
+  "production_enabled": false,
+  "capability_broker_summary": {
+    "allowed_count": 4,
+    "denied_count": 0,
+    "raw_production_access": false
+  }
+}</pre>
+          </div>
+        </div>
+      </section>
+
+      <section id="reproduce">
+        <div class="wrap">
+          <div class="section-head">
+            <h2>Reproducible from the repo.</h2>
+            <p>
+              The preview page is a public showcase. The working system is documented through runbooks, tests, Make targets, and deployment manifests in GitHub.
+            </p>
+          </div>
+          <pre class="code">git clone https://github.com/dev4-gpt/veloce-research-os.git
+cd veloce-research-os/projects/reliability-policy-matrix
+
+make stack-health
+make rollback-drill
+make autonomy-controls
+make autonomy-readiness</pre>
+        </div>
+      </section>
+
+      <section id="roadmap">
+        <div class="wrap">
+          <div class="section-head">
+            <h2>What unlocks the full product.</h2>
+            <p>
+              Veloce is already strong for controlled operator workflows. The next stage is scoped live-loop automation: Paperclip writes, chat-to-PR, canary promotion, and audited VPS capabilities.
+            </p>
+          </div>
+          <div class="grid">
+            <article class="card">
+              <span class="tag">v1.9D</span>
+              <h3>Scoped Paperclip writes</h3>
+              <p>Allow the system to post issue evidence and update disposition with least-privilege credentials and audit trails.</p>
+            </article>
+            <article class="card">
+              <span class="tag">v1.9E-F</span>
+              <h3>VPS runner + chat-to-PR</h3>
+              <p>Move from dry-run packets to controlled PR creation, verification, and operator-approved canary actions.</p>
+            </article>
+            <article class="card">
+              <span class="tag">v1.9G-H</span>
+              <h3>Demo loop</h3>
+              <p>Close one issue end to end with chat, tools, evidence, rollback proof, Paperclip closeout, and investor demo script.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap">
+        <span>Veloce Research OS</span>
+        <span>Governed agentic infrastructure for research teams.</span>
+      </div>
+    </footer>
+
+    <script>
+      const canvas = document.getElementById("network");
+      const ctx = canvas.getContext("2d");
+      let nodes = [];
+
+      function resize() {
+        const ratio = window.devicePixelRatio || 1;
+        canvas.width = Math.floor(canvas.clientWidth * ratio);
+        canvas.height = Math.floor(canvas.clientHeight * ratio);
+        ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+        const count = Math.max(34, Math.floor(canvas.clientWidth / 32));
+        nodes = Array.from({ length: count }, (_, i) => ({
+          x: Math.random() * canvas.clientWidth,
+          y: Math.random() * canvas.clientHeight,
+          vx: (Math.random() - 0.5) * 0.22,
+          vy: (Math.random() - 0.5) * 0.18,
+          r: i % 7 === 0 ? 2.5 : 1.5,
+          c: i % 5 === 0 ? "#77e0a2" : i % 3 === 0 ? "#6ed6df" : "#91b4ff"
+        }));
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+        ctx.globalAlpha = 0.75;
+        for (let i = 0; i < nodes.length; i += 1) {
+          const a = nodes[i];
+          a.x += a.vx;
+          a.y += a.vy;
+          if (a.x < 0 || a.x > canvas.clientWidth) a.vx *= -1;
+          if (a.y < 0 || a.y > canvas.clientHeight) a.vy *= -1;
+          for (let j = i + 1; j < nodes.length; j += 1) {
+            const b = nodes[j];
+            const dx = a.x - b.x;
+            const dy = a.y - b.y;
+            const d = Math.sqrt(dx * dx + dy * dy);
+            if (d < 150) {
+              ctx.strokeStyle = `rgba(170, 180, 172, ${0.18 - d / 1000})`;
+              ctx.lineWidth = 1;
+              ctx.beginPath();
+              ctx.moveTo(a.x, a.y);
+              ctx.lineTo(b.x, b.y);
+              ctx.stroke();
+            }
+          }
+          ctx.fillStyle = a.c;
+          ctx.beginPath();
+          ctx.arc(a.x, a.y, a.r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        requestAnimationFrame(draw);
+      }
+
+      window.addEventListener("resize", resize);
+      resize();
+      draw();
+    </script>
+  </body>
+</html>
