@@ -85,6 +85,7 @@ tools/
 14. For the first read-only Ruflo cockpit integration, read `docs/mcpo-ruflo-status-tool.md`.
 15. For the first Paperclip-shaped Ruflo planning bridge, read `docs/mcpo-ruflo-plan-tool.md`.
 16. For the approval-gated Paperclip execution handoff, read `docs/mcpo-ruflo-execution-packet-tool.md`.
+17. For the first end-to-end OpenWebUI/MCPO/Ruflo/Paperclip demo proof, read `docs/v1.6-end-to-end-ruflo-paperclip-demo.md`.
 
 ## Flagship Project
 
@@ -134,4 +135,5 @@ For the deployed service flow, v1.1 verifies Paperclip, Open WebUI, Hermes stand
 - `ruflo_status` is implemented as the first read-only MCPO/OpenWebUI Ruflo integration path.
 - `ruflo_plan` is implemented as the first Paperclip-shaped planning-only bridge.
 - `ruflo_execution_packet` is implemented as the approval-gated Paperclip handoff for executing approved work through Codex/GitHub/VPS without enabling Ruflo runtime execution.
+- V1.6 end-to-end proof is recorded for OpenWebUI -> MCPO -> Ruflo execution packet -> Paperclip handoff.
 - VEL-124 validation passed externally with `PYTHONPATH=. pytest -q`, producing `3 passed in 0.01s`.
