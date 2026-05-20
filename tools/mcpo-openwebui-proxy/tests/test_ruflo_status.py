@@ -195,6 +195,48 @@ class RufloStatusTests(unittest.TestCase):
         self.assertEqual(result["decision"], "blocked_runtime_execution_request")
         self.assertFalse(result["ruflo_runtime_invoked"])
 
+    def test_hermes_memory_query_dry_run_is_structured(self) -> None:
+        result = app._hermes_memory_query(
+            {
+                "query": "What is the current Veloce production posture?",
+                "dry_run": True,
+            }
+        )
+
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["service"], "veloce_hermes_memory_query")
+        self.assertFalse(result["hermes_invoked"])
+        self.assertTrue(result["audit"]["secret_free"])
+
+    def test_hermes_agent_task_requires_task(self) -> None:
+        result = app._hermes_agent_task({"context": "missing task"})
+
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["decision"], "invalid_input")
+
+    def test_ruflo_orchestration_dry_run_returns_task_graph_and_denials(self) -> None:
+        result = app._ruflo_orchestration_dry_run(
+            {
+                "issue_id": "VEL-200",
+                "goal": "Plan a production deploy but do not read secrets or run docker exec.",
+            }
+        )
+
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["decision"], "orchestration_dry_run_ready")
+        self.assertFalse(result["ruflo_runtime_invoked"])
+        self.assertGreaterEqual(len(result["task_graph"]), 1)
+        denied = {item["capability"] for item in result["denied_capabilities"]}
+        self.assertIn("secret_read", denied)
+        self.assertIn("raw_docker_control", denied)
+
+    def test_openapi_exposes_v19_paths(self) -> None:
+        paths = app._openapi_spec()["paths"]
+
+        self.assertIn("/hermes_memory_query", paths)
+        self.assertIn("/hermes_agent_task", paths)
+        self.assertIn("/ruflo_orchestration_dry_run", paths)
+
 
 if __name__ == "__main__":
     unittest.main()
