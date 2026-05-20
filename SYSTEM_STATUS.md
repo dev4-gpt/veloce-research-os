@@ -4,7 +4,7 @@ Date: 2026-05-19
 
 ## Summary
 
-Veloce Research OS v1.5 is operational as a self-hosted research operating system running on the Hostinger VPS with Paperclip, Open WebUI, Hermes, direct NVIDIA model access, GitHub, Obsidian, a runnable research project scaffold, the native Open WebUI status tool, a verified MCPO time bridge, and the read-only MCPO stack status path.
+Veloce Research OS v1.6 is operational as a self-hosted research operating system running on the Hostinger VPS with Paperclip, Open WebUI, Hermes, direct NVIDIA model access, GitHub, Obsidian, a runnable research project scaffold, native Open WebUI tools, verified MCPO time/stack/repo bridges, and a gated Ruflo planning-only sandbox.
 
 The system is ready for controlled use. Hermes standalone and Hermes memory persistence are verified. Paperclip-to-Hermes execution is verified through the HTTP wrapper path, but Hermes should not be used for exact tiny replies because its runtime context is token-heavy.
 
@@ -12,7 +12,11 @@ V1.2 core is verified: Open WebUI can call the `Veloce Status Check` tool throug
 
 V1.4 MCPO core is verified: `mcpo-time` runs on the internal `aiagency` Docker network, exposes an OpenAPI schema, and successfully calls the MCP time tool through HTTP. Open WebUI chat also invoked the MCPO time bridge through the native `Veloce MCPO Time` tool, with proxy logs showing `POST /get_current_time HTTP/1.1 200`.
 
-V1.5A is verified: Open WebUI invoked `Veloce MCPO Stack`, the proxy returned live stack JSON, and the response showed `openwebui.status = tcp_open`.
+V1.5A is verified: Open WebUI invoked `Veloce MCPO Stack`, the proxy returned live stack JSON, and the response showed current service health.
+
+V1.5B is verified: Open WebUI invoked `Veloce MCPO Repo`, returned current repository metadata, and confirmed commit `98ace0c` was clean at the time of validation.
+
+V1.6D is verified externally: the planning-only Ruflo sandbox bridge tests passed from the Paperclip workspace using a Python 3.12 container with `PYTHONPATH=.`.
 
 ## Service URLs
 
@@ -53,7 +57,8 @@ GitHub: https://github.com/dev4-gpt/veloce-research-os
 - Open WebUI native tool `Veloce MCPO Time` is installed and verified from chat.
 - V1.5 repo support exists for read-only `stack_status`.
 - V1.5 repo support exists for read-only `repo_status`.
-- V1.5 next MCPO addition after repo status should be read-only `artifact_index`.
+- V1.6 planning-only Ruflo bridge validation passed in the Paperclip workspace.
+- V1.6 next MCPO addition should be read-only `ruflo_status`.
 - GitHub repository is populated and is the source of truth for code.
 - VPS can pull and run the GitHub repository.
 - Obsidian contains the exported research artifacts and operating notes.
@@ -220,6 +225,30 @@ Current Ruflo sandbox docs:
 
 ```text
 docs/ruflo-sandbox-evaluation.md
+docs/v1.6-ruflo-planning-closeout.md
+docs/pipeline-setup.md
+```
+
+Current Ruflo sandbox path:
+
+```text
+/opt/veloce-ruflo-sandbox
+```
+
+Ruflo sandbox validation:
+
+```bash
+docker run --rm \
+  --volumes-from paperclip-iraj-paperclip-1 \
+  -w /paperclip/instances/default/workspaces/8c81e4b2-d988-46f5-8cf8-4db07300db8a \
+  python:3.12-slim \
+  sh -lc 'pip install pytest >/tmp/pip.log && PYTHONPATH=. pytest -q'
+```
+
+Observed result:
+
+```text
+3 passed in 0.01s
 ```
 
 ## Restart Checks
@@ -272,8 +301,10 @@ If a Paperclip agent says it cannot access `/root/veloce-research-os`, complete 
 - [x] Verify MCPO `/get_current_time` returns New York time JSON.
 - [x] Verify Open WebUI chat can invoke the MCPO time bridge and produce proxy log proof.
 - [x] Deploy and verify MCPO read-only `stack_status` tool.
-- [ ] Deploy and verify MCPO read-only `repo_status` tool.
-- [ ] Evaluate Ruflo in isolated planning-only sandbox after human approval.
+- [x] Deploy and verify MCPO read-only `repo_status` tool.
+- [x] Evaluate Ruflo in isolated planning-only sandbox after human approval.
+- [x] Validate VEL-124 planning-only Ruflo sandbox bridge tests externally.
+- [ ] Implement read-only Open WebUI/MCPO `ruflo_status` endpoint.
 
 ## Recommended V1.3 Task
 
@@ -293,4 +324,6 @@ docs/mcpo-ruflo-setup.md
 docs/mcpo-stack-status-tool.md
 docs/mcpo-repo-status-tool.md
 docs/ruflo-sandbox-evaluation.md
+docs/v1.6-ruflo-planning-closeout.md
+docs/pipeline-setup.md
 ```
