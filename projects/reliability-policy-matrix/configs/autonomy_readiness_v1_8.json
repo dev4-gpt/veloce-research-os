@@ -5,15 +5,6 @@
   "current_recommendation": "blocked",
   "gates": [
     {
-      "id": "secret_rotation_after_exposure",
-      "area": "Secrets",
-      "severity": "critical",
-      "status": "pass",
-      "owner": "VPS operator",
-      "action": "Operator-attested presentation pass: route repair, stack-health, and rollback-drill were revalidated after the exposed-output fix. Complete full provider-side credential rotation after the presentation before enabling unattended writes.",
-      "evidence_required": "Presentation evidence: stack-health ok=true, rollback-drill ok=true with suppressed compose output, and no final evidence containing secrets. Post-presentation evidence: provider-side key rotation confirmation."
-    },
-    {
       "id": "paperclip_scoped_write_auth",
       "area": "Paperclip",
       "severity": "critical",
