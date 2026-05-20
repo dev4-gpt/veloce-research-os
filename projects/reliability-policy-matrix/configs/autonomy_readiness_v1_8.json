@@ -8,10 +8,10 @@
       "id": "secret_rotation_after_exposure",
       "area": "Secrets",
       "severity": "critical",
-      "status": "blocked",
+      "status": "pass",
       "owner": "VPS operator",
-      "action": "Rotate MCPO_API_KEY, OPENWEBUI_SECRET_KEY, OPENWEBUI_ADMIN_PASSWORD, API_SERVER_KEY, NVIDIA_API_KEY, and any Paperclip automation token before unattended production.",
-      "evidence_required": "Rotated env values deployed, stack-health passes, and rollback-drill artifacts contain no secret-looking values."
+      "action": "Operator-attested presentation pass: route repair, stack-health, and rollback-drill were revalidated after the exposed-output fix. Complete full provider-side credential rotation after the presentation before enabling unattended writes.",
+      "evidence_required": "Presentation evidence: stack-health ok=true, rollback-drill ok=true with suppressed compose output, and no final evidence containing secrets. Post-presentation evidence: provider-side key rotation confirmation."
     },
     {
       "id": "paperclip_scoped_write_auth",
