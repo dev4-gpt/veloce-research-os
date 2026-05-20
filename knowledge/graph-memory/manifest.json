@@ -1,0 +1,16 @@
+{
+  "commit": "98f1e06",
+  "files": [
+    "knowledge/graph-memory/veloce-operating-graph.md",
+    "knowledge/graph-memory/openwebui-mcpo-tool-surface.md",
+    "knowledge/graph-memory/paperclip-work-ledger.md",
+    "knowledge/graph-memory/hermes-ruflo-skills.md",
+    "knowledge/graph-memory/obsidian-graphify-memory-loop.md"
+  ],
+  "generated_at": "2026-05-20T21:23:34Z",
+  "mcpo_paths": 13,
+  "ok": true,
+  "openwebui_tools": 10,
+  "out_dir": "knowledge/graph-memory",
+  "paperclip_items": 0
+}
