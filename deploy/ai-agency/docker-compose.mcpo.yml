@@ -47,8 +47,10 @@ services:
       HERMES_URL: http://hermes:8642
       PAPERCLIP_URL: http://paperclip-iraj-paperclip-1:3100
       RESEARCH_REPO_PATH: /workspace/veloce-research-os
+      RUFLO_SANDBOX_PATH: /workspace/ruflo-sandbox
     volumes:
       - /root/veloce-research-os:/workspace/veloce-research-os:ro
+      - /opt/veloce-ruflo-sandbox:/workspace/ruflo-sandbox:ro
     networks:
       - aiagency
     expose:

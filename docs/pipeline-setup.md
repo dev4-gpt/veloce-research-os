@@ -71,6 +71,12 @@ Veloce MCPO Repo
 Veloce Status Check
 ```
 
+Implemented and pending VPS verification:
+
+```text
+Veloce MCPO Ruflo
+```
+
 ## Paperclip Flow
 
 ```text
@@ -239,6 +245,6 @@ VEL-127: done, recovery loop resolved
 
 ## Next Safe Step
 
-Implement a real, read-only `ruflo_status` endpoint through MCPO/OpenWebUI that reports the sandbox state without starting Ruflo services.
+Deploy and verify the read-only `ruflo_status` endpoint through MCPO/OpenWebUI.
 
 Do not start Ruflo daemon, swarm, memory, hooks, or autopilot until a separate review approves production isolation.

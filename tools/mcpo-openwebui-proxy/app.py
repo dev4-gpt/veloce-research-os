@@ -35,6 +35,9 @@ PAPERCLIP_URL = os.environ.get(
 RESEARCH_REPO_PATH = Path(
     os.environ.get("RESEARCH_REPO_PATH", "/workspace/veloce-research-os")
 )
+RUFLO_SANDBOX_PATH = Path(
+    os.environ.get("RUFLO_SANDBOX_PATH", "/workspace/ruflo-sandbox")
+)
 
 
 def _json_bytes(payload: dict[str, Any]) -> bytes:
@@ -97,6 +100,38 @@ def _openapi_spec() -> dict[str, Any]:
                     "responses": {
                         "200": {
                             "description": "Repository status result",
+                            "content": {"application/json": {"schema": {"type": "object"}}},
+                        },
+                        "401": {"description": "Unauthorized"},
+                    },
+                }
+            },
+            "/ruflo_status": {
+                "post": {
+                    "operationId": "ruflo_status",
+                    "summary": "Check read-only Ruflo sandbox status.",
+                    "security": [{"bearerAuth": []}],
+                    "requestBody": {
+                        "required": False,
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "scope": {
+                                            "type": "string",
+                                            "default": "sandbox",
+                                            "enum": ["sandbox"],
+                                        }
+                                    },
+                                    "additionalProperties": False,
+                                }
+                            }
+                        },
+                    },
+                    "responses": {
+                        "200": {
+                            "description": "Ruflo sandbox status result",
                             "content": {"application/json": {"schema": {"type": "object"}}},
                         },
                         "401": {"description": "Unauthorized"},
@@ -385,6 +420,171 @@ def _stack_status() -> dict[str, Any]:
     }
 
 
+def _safe_read_text(path: Path, limit: int = 80_000) -> str:
+    try:
+        return path.read_text(encoding="utf-8")[:limit]
+    except Exception:
+        return ""
+
+
+def _json_file(path: Path) -> dict[str, Any]:
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+def _contains_all(text: str, needles: list[str]) -> bool:
+    return all(needle in text for needle in needles)
+
+
+def _ruflo_validation_status() -> dict[str, Any]:
+    closeout = RESEARCH_REPO_PATH / "docs" / "v1.6-ruflo-planning-closeout.md"
+    text = _safe_read_text(closeout)
+    passed = "3 passed in 0.01s" in text and "PYTHONPATH=. pytest -q" in text
+    return {
+        "ok": passed,
+        "source": str(closeout),
+        "detail": (
+            "VEL-124 validation recorded: 3 passed in 0.01s"
+            if passed
+            else "VEL-124 validation proof not found in mounted repo docs"
+        ),
+    }
+
+
+def _ruflo_status() -> dict[str, Any]:
+    trace_id = str(uuid.uuid4())
+    started = time.time()
+    sandbox = RUFLO_SANDBOX_PATH
+
+    runtime_config = sandbox / ".claude-flow" / "config.yaml"
+    claude_settings = sandbox / ".claude" / "settings.json"
+    codex_config = sandbox / ".agents" / "config.toml"
+    mcp_config = sandbox / ".mcp.json"
+    agents_doc = sandbox / "AGENTS.md"
+    claude_doc = sandbox / "CLAUDE.md"
+
+    runtime_text = _safe_read_text(runtime_config)
+    codex_text = _safe_read_text(codex_config)
+    settings = _json_file(claude_settings)
+    mcp = _json_file(mcp_config)
+
+    permissions = settings.get("permissions", {}) if isinstance(settings, dict) else {}
+    env = settings.get("env", {}) if isinstance(settings, dict) else {}
+    claude_flow = settings.get("claudeFlow", {}) if isinstance(settings, dict) else {}
+    mcp_server = (
+        mcp.get("mcpServers", {}).get("ruflo", {})
+        if isinstance(mcp.get("mcpServers", {}), dict)
+        else {}
+    )
+    mcp_env = mcp_server.get("env", {}) if isinstance(mcp_server, dict) else {}
+
+    checks = {
+        "sandbox_path": {
+            "ok": sandbox.exists() and sandbox.is_dir(),
+            "path": str(sandbox),
+            "detail": "sandbox directory exists" if sandbox.exists() else "sandbox directory missing",
+        },
+        "runtime_config": {
+            "ok": runtime_config.exists(),
+            "path": str(runtime_config),
+            "detail": ".claude-flow runtime config present",
+        },
+        "claude_settings": {
+            "ok": claude_settings.exists(),
+            "path": str(claude_settings),
+            "detail": "Claude/Ruflo settings present",
+        },
+        "codex_config": {
+            "ok": codex_config.exists(),
+            "path": str(codex_config),
+            "detail": "Codex agent config present",
+        },
+        "mcp_config": {
+            "ok": mcp_config.exists(),
+            "path": str(mcp_config),
+            "detail": "MCP config present but autoStart must remain false",
+        },
+        "agent_docs": {
+            "ok": agents_doc.exists() and claude_doc.exists(),
+            "paths": [str(agents_doc), str(claude_doc)],
+            "detail": "AGENTS.md and CLAUDE.md present",
+        },
+        "runtime_hardened": {
+            "ok": _contains_all(
+                runtime_text,
+                [
+                    "maxAgents: 1",
+                    "autoScale: false",
+                    "autoExecute: false",
+                    "autoStart: false",
+                ],
+            ),
+            "detail": "runtime config disables autoscale, autoexecute, autostart and limits maxAgents to 1",
+        },
+        "claude_hardened": {
+            "ok": (
+                permissions.get("allow") == []
+                and "Bash(*)" in permissions.get("deny", [])
+                and "Write(*)" in permissions.get("deny", [])
+                and "Edit(*)" in permissions.get("deny", [])
+                and env.get("CLAUDE_FLOW_V3_ENABLED") == "false"
+                and env.get("CLAUDE_FLOW_HOOKS_ENABLED") == "false"
+                and claude_flow.get("enabled") is False
+                and claude_flow.get("daemon", {}).get("autoStart") is False
+            ),
+            "detail": "Claude settings block shell/write/edit and disable Claude Flow runtime hooks",
+        },
+        "mcp_hardened": {
+            "ok": (
+                mcp_server.get("autoStart") is False
+                and mcp_env.get("CLAUDE_FLOW_HOOKS_ENABLED") == "false"
+                and mcp_env.get("CLAUDE_FLOW_MAX_AGENTS") == "1"
+            ),
+            "detail": "Ruflo MCP config is present but does not autostart",
+        },
+        "codex_hardened": {
+            "ok": (
+                'approval_policy = "on-request"' in codex_text
+                and 'sandbox_mode = "workspace-write"' in codex_text
+                and '"*_KEY"' in codex_text
+                and '"*_SECRET"' in codex_text
+            ),
+            "detail": "Codex config keeps approvals and excludes secret-like environment variables",
+        },
+        "vel_124_validation": _ruflo_validation_status(),
+    }
+    ok = all(check.get("ok") for check in checks.values())
+
+    return {
+        "ok": ok,
+        "service": "veloce_ruflo_status",
+        "checked_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "trace_id": trace_id,
+        "sandbox_path": str(sandbox),
+        "mode": "read_only_status",
+        "production_enabled": False,
+        "disallowed_services": [
+            "daemon",
+            "swarm",
+            "memory",
+            "hooks",
+            "autopilot",
+            "claude_mcp_autostart",
+            "codex_mcp_autostart",
+        ],
+        "checks": checks,
+        "latency_ms": int((time.time() - started) * 1000),
+        "verification_hints": [
+            "ls -la /opt/veloce-ruflo-sandbox",
+            "grep -RniE 'autoExecute|autoScale|HOOKS_ENABLED|autoStart|maxAgents|enabled|Bash' /opt/veloce-ruflo-sandbox/.claude-flow/config.yaml /opt/veloce-ruflo-sandbox/.claude/settings.json /opt/veloce-ruflo-sandbox/.mcp.json",
+            "docker logs --tail=20 aiagency-mcpo-openwebui-proxy",
+        ],
+        "next_safe_step": "Keep Ruflo planning-only. Do not start daemon, swarm, memory, hooks, or autopilot.",
+    }
+
+
 class Handler(BaseHTTPRequestHandler):
     server_version = "VeloceMCPOProxy/0.1"
 
@@ -430,6 +630,7 @@ class Handler(BaseHTTPRequestHandler):
         if self.path not in {
             "/stack_status",
             "/repo_status",
+            "/ruflo_status",
             "/get_current_time",
             "/convert_time",
         }:
@@ -446,6 +647,9 @@ class Handler(BaseHTTPRequestHandler):
             return
         if self.path == "/repo_status":
             self._write_json(200, _repo_status())
+            return
+        if self.path == "/ruflo_status":
+            self._write_json(200, _ruflo_status())
             return
 
         length = int(self.headers.get("content-length", "0"))
