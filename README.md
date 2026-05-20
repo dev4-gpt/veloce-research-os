@@ -98,6 +98,7 @@ tools/
 27. For the full-capability agentic product roadmap, read `docs/v1.9-full-capability-agentic-product-plan.md`.
 28. For the v1.9A-C OpenWebUI/Hermes/Ruflo closeout, read `docs/v1.9A-C-openwebui-hermes-ruflo-closeout.md`.
 29. For a public-safe preview page, deploy `showcase/` to Vercel or Netlify.
+30. For the Obsidian + Graphify knowledge layer, read `docs/v1.9I-obsidian-graphify-knowledge-layer.md`.
 
 ## Flagship Project
 

@@ -1,0 +1,25 @@
+.git/
+.venv/
+node_modules/
+.vercel/
+__pycache__/
+*.pyc
+
+# Runtime/generated artifacts that can contain logs or local-only state.
+projects/reliability-policy-matrix/artifacts/raw/
+projects/reliability-policy-matrix/artifacts/derived/
+projects/reliability-policy-matrix/artifacts/figures/
+
+# Local deployment/session material should not be indexed into a public graph.
+*.env
+*.env.*
+*.pem
+*.key
+*.crt
+*.p12
+*.sqlite
+*.db
+*.log
+
+# Keep generated graph outputs out of the source graph input.
+graphify-out/
