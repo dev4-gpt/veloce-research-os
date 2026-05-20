@@ -105,6 +105,21 @@ The drill writes:
 artifacts/derived/rollback_drill_v1_7F.json
 ```
 
+## V1.8 Autonomy Readiness Gate
+
+Run before enabling unattended production writes:
+
+```bash
+make autonomy-readiness
+```
+
+The gate intentionally fails closed until v1.8 controls pass. It writes:
+
+```text
+artifacts/derived/autonomy_readiness_v1_8.json
+artifacts/derived/autonomy_readiness_v1_8.md
+```
+
 ## Outputs
 
 Generated outputs are written under:

@@ -92,6 +92,7 @@ tools/
 21. For the VEL-132 monitoring and alerting runbook, read `docs/v1.7C-monitoring-alerting-runbook.md`.
 22. For the VEL-134 security and access review, read `docs/v1.7D-security-access-review.md`.
 23. For the VEL-142 rollback drill runbook, read `docs/v1.7F-rollback-drill-runbook.md`.
+24. For the unattended autonomous production plan, read `docs/v1.8-unattended-autonomy-plan.md`.
 
 ## Flagship Project
 
@@ -142,5 +143,6 @@ For the deployed service flow, v1.1 verifies Paperclip, Open WebUI, Hermes stand
 - `ruflo_plan` is implemented as the first Paperclip-shaped planning-only bridge.
 - `ruflo_execution_packet` is implemented as the approval-gated Paperclip handoff for executing approved work through Codex/GitHub/VPS without enabling Ruflo runtime execution.
 - V1.6 end-to-end proof is recorded for OpenWebUI -> MCPO -> Ruflo execution packet -> Paperclip handoff.
-- V1.7 production-readiness work is not complete yet; the stack is operator-beta ready, not unattended production ready.
+- V1.7 production-readiness work is sufficient for controlled operator workflows after secret rotation; the stack is not unattended production ready.
+- V1.8 defines the unattended autonomy gate and starts with `make autonomy-readiness`.
 - VEL-124 validation passed externally with `PYTHONPATH=. pytest -q`, producing `3 passed in 0.01s`.

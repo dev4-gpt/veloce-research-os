@@ -14,7 +14,7 @@ Production-readiness status:
 Operator beta: yes
 Unattended production: no
 Customer/SLA production: no
-Next gate: v1.7 production readiness audit
+Next gate: v1.8 autonomy readiness and secret rotation
 ```
 
 V1.2 core is verified: Open WebUI can call the `Veloce Status Check` tool through the native Open WebUI tool interface when using `openai/gpt-oss-120b`.
@@ -72,6 +72,7 @@ GitHub: https://github.com/dev4-gpt/veloce-research-os
 - V1.6 approval-gated `ruflo_execution_packet` support exists in the MCPO proxy and Open WebUI wrapper.
 - V1.6 end-to-end demo proof is recorded in `docs/v1.6-end-to-end-ruflo-paperclip-demo.md`.
 - V1.7 production-readiness gate is documented in `docs/v1.7-production-readiness-plan.md`.
+- V1.8 unattended autonomous production gate is documented in `docs/v1.8-unattended-autonomy-plan.md`.
 - GitHub repository is populated and is the source of truth for code.
 - VPS can pull and run the GitHub repository.
 - Obsidian contains the exported research artifacts and operating notes.

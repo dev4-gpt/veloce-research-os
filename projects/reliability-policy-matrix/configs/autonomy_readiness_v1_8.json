@@ -1,0 +1,107 @@
+{
+  "generated_json": "artifacts/derived/autonomy_readiness_v1_8.json",
+  "generated_markdown": "artifacts/derived/autonomy_readiness_v1_8.md",
+  "target_state": "unattended_autonomous_production",
+  "current_recommendation": "blocked",
+  "gates": [
+    {
+      "id": "secret_rotation_after_exposure",
+      "area": "Secrets",
+      "severity": "critical",
+      "status": "blocked",
+      "owner": "VPS operator",
+      "action": "Rotate MCPO_API_KEY, OPENWEBUI_SECRET_KEY, OPENWEBUI_ADMIN_PASSWORD, API_SERVER_KEY, NVIDIA_API_KEY, and any Paperclip automation token before unattended production.",
+      "evidence_required": "Rotated env values deployed, stack-health passes, and rollback-drill artifacts contain no secret-looking values."
+    },
+    {
+      "id": "paperclip_scoped_write_auth",
+      "area": "Paperclip",
+      "severity": "critical",
+      "status": "blocked",
+      "owner": "Paperclip control-plane owner",
+      "action": "Provision a scoped automation token that can post comments and update dispositions without broad admin access.",
+      "evidence_required": "POST comment and PATCH status succeed for a test issue, with audit records and without recovery loops."
+    },
+    {
+      "id": "capability_broker",
+      "area": "Execution",
+      "severity": "critical",
+      "status": "blocked",
+      "owner": "Codex/GitHub",
+      "action": "Implement typed capabilities for safe reads, issue comments, PR creation, canary deploy, verification, rollback, and alerting.",
+      "evidence_required": "Capability config forbids arbitrary shell, raw Docker, raw filesystem writes, raw GitHub token use, secret reads, and Ruflo runtime execution."
+    },
+    {
+      "id": "policy_gate",
+      "area": "Safety",
+      "severity": "critical",
+      "status": "blocked",
+      "owner": "Codex/GitHub",
+      "action": "Add risk classification and deny/allow rules for read-only, comment-only, low-risk write, production write, destructive, and secret-bearing actions.",
+      "evidence_required": "Policy tests prove destructive and secret-bearing actions require human approval."
+    },
+    {
+      "id": "audit_ledger",
+      "area": "Audit",
+      "severity": "critical",
+      "status": "blocked",
+      "owner": "Codex/GitHub/VPS",
+      "action": "Create durable secret-free autonomy action ledger with action IDs, inputs/outputs hashes, commit SHA, verification, rollback, alert, and disposition fields.",
+      "evidence_required": "One dry-run action writes a complete ledger record outside the transient container."
+    },
+    {
+      "id": "active_alerting",
+      "area": "Monitoring",
+      "severity": "critical",
+      "status": "blocked",
+      "owner": "VPS operator",
+      "action": "Configure scheduled stack-health and alert destination for failures, rollbacks, stale issues, loop/budget breaches, and provider spend anomalies.",
+      "evidence_required": "Scheduled monitor run and test alert proof exist without printing webhook secrets."
+    },
+    {
+      "id": "canary_and_rollback",
+      "area": "Release",
+      "severity": "critical",
+      "status": "blocked",
+      "owner": "Codex/GitHub/VPS",
+      "action": "Define canary deployment path, pre/post health snapshots, automatic rollback command, and rollback verification.",
+      "evidence_required": "One non-destructive canary or dry-run promotion completes with rollback proof."
+    },
+    {
+      "id": "kill_switch",
+      "area": "Operations",
+      "severity": "critical",
+      "status": "blocked",
+      "owner": "VPS operator",
+      "action": "Document and test one command that disables scheduled autonomy and revokes automation execution.",
+      "evidence_required": "Operator can disable autonomy and stack-health still reports core services."
+    },
+    {
+      "id": "ruflo_boundary",
+      "area": "Ruflo",
+      "severity": "critical",
+      "status": "pass",
+      "owner": "VPS operator",
+      "action": "Keep Ruflo planning/packet only until all non-Ruflo autonomy controls pass.",
+      "evidence_required": "ruflo_status reports production_enabled=false and disallowed runtime services."
+    },
+    {
+      "id": "v1_7_recovery_baseline",
+      "area": "Recovery",
+      "severity": "critical",
+      "status": "pass",
+      "owner": "VPS operator",
+      "action": "Keep v1.7 backup, restore, monitoring, security, and rollback artifacts current.",
+      "evidence_required": "v1.7B, v1.7C, v1.7D, and v1.7F evidence exists and remains reproducible."
+    }
+  ],
+  "forbidden_until_ready": [
+    "unattended_github_merge",
+    "unattended_vps_deploy",
+    "unattended_docker_control",
+    "unattended_secret_access",
+    "unattended_paperclip_closure",
+    "ruflo_runtime_execution",
+    "browser_extension_production_writes"
+  ]
+}

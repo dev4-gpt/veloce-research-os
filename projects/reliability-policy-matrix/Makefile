@@ -1,4 +1,4 @@
-.PHONY: matrix-plan run-sample aggregate-sample week1-plan week1-sample week1-full stack-health security-access-review rollback-drill test clean
+.PHONY: matrix-plan run-sample aggregate-sample week1-plan week1-sample week1-full stack-health security-access-review rollback-drill autonomy-readiness test clean
 
 PYTHON ?= python3
 
@@ -29,6 +29,9 @@ security-access-review:
 
 rollback-drill:
 	$(PYTHON) scripts/rollback_drill.py --config configs/rollback_drill_v1_7F.json
+
+autonomy-readiness:
+	$(PYTHON) scripts/autonomy_readiness_gate.py --config configs/autonomy_readiness_v1_8.json
 
 test:
 	$(PYTHON) -m unittest discover -s tests
