@@ -240,7 +240,7 @@ class RufloStatusTests(unittest.TestCase):
         self.assertIn("/knowledge_graph_query", paths)
         self.assertIn("/knowledge_memory_record", paths)
 
-    def test_knowledge_graph_query_returns_matches(self) -> None:
+    def test_knowledge_graph_query_prefers_docs_by_default(self) -> None:
         temp = tempfile.TemporaryDirectory()
         original_graph = app.GRAPHIFY_GRAPH_PATH
         try:
@@ -251,24 +251,43 @@ class RufloStatusTests(unittest.TestCase):
                         "built_at_commit": "abc123",
                         "nodes": [
                             {
-                                "id": "openwebui",
-                                "label": "OpenWebUI",
-                                "source_file": "docs/v1.9.md",
+                                "id": "v19_product",
+                                "label": "V1.9 OpenWebUI Hermes Ruflo Paperclip MCPO Obsidian Graphify Product Plan",
+                                "source_file": "docs/v1.9-full-capability-agentic-product-plan.md",
                                 "community": 1,
                             },
                             {
-                                "id": "ruflo",
-                                "label": "Ruflo orchestration",
-                                "source_file": "docs/v1.9.md",
+                                "id": "v19_graph",
+                                "label": "V1.9J Obsidian Graphify Knowledge Graph Memory Loop",
+                                "source_file": "docs/v1.9J-knowledge-graph-memory-loop.md",
                                 "community": 1,
+                            },
+                            {
+                                "id": "ruflo_test",
+                                "label": ".test_ruflo_execution_packet_returns_paperclip_handoff()",
+                                "source_file": "tools/mcpo-openwebui-proxy/tests/test_ruflo_status.py",
+                                "source_location": "L160",
+                                "community": 2,
+                            },
+                            {
+                                "id": "ruflo_code",
+                                "label": "mcpo_ruflo_tool.py",
+                                "source_file": "tools/openwebui/mcpo_ruflo_tool.py",
+                                "community": 3,
                             },
                         ],
                         "links": [
                             {
-                                "source": "openwebui",
-                                "target": "ruflo",
+                                "source": "v19_product",
+                                "target": "v19_graph",
+                                "relation": "references",
+                                "source_file": "docs/v1.9-full-capability-agentic-product-plan.md",
+                            },
+                            {
+                                "source": "ruflo_test",
+                                "target": "ruflo_code",
                                 "relation": "calls",
-                                "source_file": "docs/v1.9.md",
+                                "source_file": "tools/mcpo-openwebui-proxy/tests/test_ruflo_status.py",
                             }
                         ],
                     }
@@ -278,15 +297,56 @@ class RufloStatusTests(unittest.TestCase):
             app.GRAPHIFY_GRAPH_PATH = graph_path
             status = app._knowledge_graph_status()
             self.assertTrue(status["ok"])
-            self.assertEqual(status["nodes"], 2)
+            self.assertEqual(status["nodes"], 4)
 
             result = app._knowledge_graph_query(
-                {"question": "How does OpenWebUI connect to Ruflo?", "max_results": 4}
+                {
+                    "question": "what connects OpenWebUI, Hermes, Ruflo, Paperclip, MCPO, Obsidian, and Graphify?",
+                    "max_results": 4,
+                }
             )
             self.assertTrue(result["ok"])
-            labels = {item["label"] for item in result["matches"]}
-            self.assertIn("OpenWebUI", labels)
-            self.assertIn("docs/v1.9.md", result["evidence_docs"])
+            self.assertEqual(result["source_filter"], "docs")
+            self.assertIn("v1.9K_weighted_docs", result["ranking_mode"])
+            self.assertIn("summary_answer", result)
+            self.assertIn("matches", result)
+            self.assertIn("relationships", result)
+            self.assertIn("evidence_docs", result)
+            self.assertTrue(result["matches"])
+            self.assertTrue(
+                all(item["source_file"].startswith("docs/") for item in result["matches"])
+            )
+            self.assertEqual(
+                result["matches"][0]["source_file"],
+                "docs/v1.9-full-capability-agentic-product-plan.md",
+            )
+            self.assertIn(
+                "docs/v1.9-full-capability-agentic-product-plan.md",
+                result["evidence_docs"],
+            )
+
+            tests_result = app._knowledge_graph_query(
+                {
+                    "question": "which tests prove Ruflo execution packet handoff?",
+                    "max_results": 4,
+                    "source_filter": "tests",
+                }
+            )
+            self.assertTrue(tests_result["ok"])
+            self.assertEqual(tests_result["source_filter"], "tests")
+            self.assertEqual(
+                tests_result["matches"][0]["source_file"],
+                "tools/mcpo-openwebui-proxy/tests/test_ruflo_status.py",
+            )
+
+            invalid_filter_result = app._knowledge_graph_query(
+                {
+                    "question": "how does graph memory connect to the product?",
+                    "source_filter": "nonsense",
+                }
+            )
+            self.assertTrue(invalid_filter_result["ok"])
+            self.assertEqual(invalid_filter_result["source_filter"], "docs")
         finally:
             app.GRAPHIFY_GRAPH_PATH = original_graph
             temp.cleanup()

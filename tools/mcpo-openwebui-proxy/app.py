@@ -383,6 +383,17 @@ def _openapi_spec() -> dict[str, Any]:
                                     "properties": {
                                         "question": {"type": "string"},
                                         "max_results": {"type": "integer", "default": 8},
+                                        "source_filter": {
+                                            "type": "string",
+                                            "enum": ["docs", "code", "tests", "all"],
+                                            "default": "docs",
+                                        },
+                                        "include_relationships": {"type": "boolean", "default": True},
+                                        "answer_style": {
+                                            "type": "string",
+                                            "enum": ["raw", "summary"],
+                                            "default": "summary",
+                                        },
                                     },
                                     "required": ["question"],
                                     "additionalProperties": True,
@@ -1571,6 +1582,123 @@ def _graph_terms(question: str) -> list[str]:
     return [term for term in terms if len(term) > 2 and term not in stop]
 
 
+PRODUCT_GRAPH_TERMS = {
+    "openwebui",
+    "hermes",
+    "ruflo",
+    "paperclip",
+    "mcpo",
+    "obsidian",
+    "graphify",
+    "graph.json",
+}
+
+
+def _graph_source_kind(node: dict[str, Any]) -> str:
+    source = _as_string(node.get("source_file")).lower()
+    if not source:
+        return "other"
+    if source.startswith("docs/") or source in {"readme.md", "system_status.md"}:
+        return "docs"
+    if "/tests/" in source or source.startswith("tests/") or source.endswith("_test.py") or "test_" in source:
+        return "tests"
+    if source.endswith((".json", ".yaml", ".yml", ".toml")):
+        return "config"
+    if source.endswith((".py", ".js", ".ts", ".tsx", ".mjs", ".sh", ".mdx")):
+        return "code"
+    return "other"
+
+
+def _graph_question_intent(question: str) -> str:
+    q = question.lower()
+    if re.search(r"\b(test|tests|proof|validate|validation|unit|fixture|assert)\b", q):
+        return "proof"
+    if re.search(r"\b(memory|knowledge|obsidian|graphify|graph|context)\b", q):
+        return "memory"
+    if re.search(r"\b(architecture|product|connect|connection|flow|system|openwebui|hermes|ruflo|paperclip|mcpo)\b", q):
+        return "architecture"
+    if re.search(r"\b(code|function|method|class|endpoint|implementation)\b", q):
+        return "code"
+    return "general"
+
+
+def _normalize_graph_source_filter(value: Any, intent: str) -> str:
+    source_filter = _as_string(value).lower()
+    if source_filter in {"docs", "code", "tests", "all"}:
+        return source_filter
+    if intent in {"proof", "code"} and source_filter == "":
+        return "all"
+    return "docs"
+
+
+def _score_graph_node(
+    node: dict[str, Any],
+    terms: list[str],
+    question: str,
+    source_filter: str,
+    intent: str,
+) -> int:
+    kind = _graph_source_kind(node)
+    if source_filter != "all" and kind != source_filter:
+        return 0
+
+    label = _as_string(node.get("label")).lower()
+    source = _as_string(node.get("source_file")).lower()
+    text = _graph_node_text(node).lower()
+    question_lower = question.lower()
+    score = 0
+
+    for term in terms:
+        if term in label:
+            score += 9
+        elif term in text:
+            score += 3
+
+    for term in PRODUCT_GRAPH_TERMS:
+        if term in question_lower and term in text:
+            score += 7
+
+    if question_lower and question_lower in text:
+        score += 18
+    if score == 0:
+        return 0
+    if kind == "docs":
+        score += 14 if intent in {"architecture", "memory", "general"} else 5
+    if source in {"readme.md", "system_status.md"}:
+        score += 8
+    if "v1.9" in source or "v1.9" in label:
+        score += 5
+    if kind == "tests":
+        score += 12 if source_filter == "tests" or intent == "proof" else -12
+    if kind == "code" and intent in {"architecture", "memory", "general"}:
+        score -= 4
+    return max(score, 0)
+
+
+def _summarize_graph_answer(
+    question: str,
+    matches: list[dict[str, Any]],
+    relationships: list[dict[str, Any]],
+    evidence_docs: list[str],
+) -> str:
+    if not matches:
+        return "No graph nodes matched this question under the selected source filter."
+
+    top_labels = [_as_string(node.get("label")) for node in matches[:3] if _as_string(node.get("label"))]
+    top_docs = evidence_docs[:3]
+    parts = [
+        f"Graph query matched {len(matches)} node(s) for: {question}",
+        f"Top evidence nodes: {', '.join(top_labels)}." if top_labels else "",
+        f"Evidence docs: {', '.join(top_docs)}." if top_docs else "",
+        (
+            "Product-level path: OpenWebUI uses MCPO tools to query Graphify graph.json; "
+            "Obsidian is the human-readable memory layer; Hermes and Ruflo can consume the returned graph context."
+        ),
+        f"Nearby graph relationships returned: {len(relationships)}.",
+    ]
+    return " ".join(part for part in parts if part)
+
+
 def _knowledge_graph_status() -> dict[str, Any]:
     trace_id = str(uuid.uuid4())
     graph, error = _load_graphify_graph()
@@ -1635,28 +1763,34 @@ def _knowledge_graph_query(payload: dict[str, Any]) -> dict[str, Any]:
             "error": error,
         }
 
-    max_results = int(payload.get("max_results", 8) or 8)
+    try:
+        max_results = int(payload.get("max_results", 8) or 8)
+    except (TypeError, ValueError):
+        max_results = 8
     max_results = max(1, min(max_results, 20))
+    intent = _graph_question_intent(question)
+    source_filter = _normalize_graph_source_filter(payload.get("source_filter"), intent)
+    include_relationships = bool(payload.get("include_relationships", True))
+    answer_style = _as_string(payload.get("answer_style") or "summary").lower()
+    if answer_style not in {"raw", "summary"}:
+        answer_style = "summary"
     terms = _graph_terms(question)
     nodes = [node for node in graph.get("nodes", []) if isinstance(node, dict)]
     links = [link for link in graph.get("links", []) if isinstance(link, dict)]
 
-    scored: list[tuple[int, dict[str, Any]]] = []
+    scored: list[tuple[int, str, dict[str, Any]]] = []
     for node in nodes:
-        text = _graph_node_text(node).lower()
-        score = sum(3 if term in _as_string(node.get("label")).lower() else 1 for term in terms if term in text)
-        if question.lower() in text:
-            score += 10
+        score = _score_graph_node(node, terms, question, source_filter, intent)
         if score:
-            scored.append((score, node))
-    scored.sort(key=lambda item: (-item[0], _as_string(item[1].get("label"))))
-    matches = [node for _, node in scored[:max_results]]
+            scored.append((score, _graph_source_kind(node), node))
+    scored.sort(key=lambda item: (-item[0], item[1] != "docs", _as_string(item[2].get("label"))))
+    matches = [node for _, _, node in scored[:max_results]]
     match_ids = {node.get("id") for node in matches}
     neighbor_edges = [
         link
         for link in links
         if link.get("source") in match_ids or link.get("target") in match_ids
-    ][: max_results * 3]
+    ][: max_results * 3] if include_relationships else []
     node_by_id = {node.get("id"): node for node in nodes}
     neighbor_nodes = []
     seen = set(match_ids)
@@ -1673,6 +1807,32 @@ def _knowledge_graph_query(payload: dict[str, Any]) -> dict[str, Any]:
             if _as_string(node.get("source_file")).endswith((".md", ".mdx", ".txt"))
         }
     )
+    formatted_matches = [
+        {
+            "id": node.get("id"),
+            "label": node.get("label"),
+            "source_file": node.get("source_file"),
+            "source_location": node.get("source_location"),
+            "community": node.get("community"),
+        }
+        for node in matches
+    ]
+    formatted_relationships = [
+        {
+            "source": link.get("source"),
+            "target": link.get("target"),
+            "relation": link.get("relation"),
+            "source_file": link.get("source_file"),
+        }
+        for link in neighbor_edges
+    ]
+    evidence_docs = evidence_docs[:max_results]
+    summary_answer = _summarize_graph_answer(
+        question,
+        formatted_matches,
+        formatted_relationships,
+        evidence_docs,
+    )
     return {
         "ok": True,
         "service": "veloce_knowledge_graph_query",
@@ -1680,30 +1840,17 @@ def _knowledge_graph_query(payload: dict[str, Any]) -> dict[str, Any]:
         "trace_id": trace_id,
         "question": question,
         "source": str(GRAPHIFY_GRAPH_PATH),
+        "source_filter": source_filter,
+        "ranking_mode": f"v1.9K_weighted_{source_filter}_{intent}",
+        "summary_answer": summary_answer,
         "answer": (
-            f"Found {len(matches)} high-signal graph node(s) and "
-            f"{len(neighbor_edges)} nearby relationship(s) for this question."
+            summary_answer
+            if answer_style == "summary"
+            else f"Found {len(matches)} high-signal graph node(s) and {len(neighbor_edges)} nearby relationship(s) for this question."
         ),
-        "matches": [
-            {
-                "id": node.get("id"),
-                "label": node.get("label"),
-                "source_file": node.get("source_file"),
-                "source_location": node.get("source_location"),
-                "community": node.get("community"),
-            }
-            for node in matches
-        ],
-        "relationships": [
-            {
-                "source": link.get("source"),
-                "target": link.get("target"),
-                "relation": link.get("relation"),
-                "source_file": link.get("source_file"),
-            }
-            for link in neighbor_edges
-        ],
-        "evidence_docs": evidence_docs[:max_results],
+        "matches": formatted_matches,
+        "relationships": formatted_relationships,
+        "evidence_docs": evidence_docs,
         "next_action": "Use evidence_docs for human review, or pass matches into Hermes/Ruflo as structured context.",
     }
 

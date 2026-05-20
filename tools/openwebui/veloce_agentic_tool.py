@@ -136,6 +136,9 @@ class Tools:
         self,
         question: str,
         max_results: int = 8,
+        source_filter: str = "docs",
+        answer_style: str = "summary",
+        include_relationships: bool = True,
     ) -> str:
         """
         Query the Veloce Graphify knowledge graph.
@@ -143,10 +146,19 @@ class Tools:
         Args:
             question: Knowledge graph question about Veloce docs, code, runbooks, or architecture.
             max_results: Maximum graph nodes/evidence docs to return.
+            source_filter: docs, code, tests, or all. Defaults to docs for product/architecture analysis.
+            answer_style: summary for a graph-grounded narrative, or raw for compact legacy output.
+            include_relationships: Include nearby graph relationships in the response.
         """
         return self._call(
             "/knowledge_graph_query",
-            {"question": question, "max_results": max_results},
+            {
+                "question": question,
+                "max_results": max_results,
+                "source_filter": source_filter,
+                "answer_style": answer_style,
+                "include_relationships": include_relationships,
+            },
         )
 
     async def veloce_knowledge_memory_record(

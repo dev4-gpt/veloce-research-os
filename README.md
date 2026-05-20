@@ -101,6 +101,7 @@ tools/
 30. For the Obsidian + Graphify knowledge layer, read `docs/v1.9I-obsidian-graphify-knowledge-layer.md`.
 31. For the VPS Graphify proof, read `docs/v1.9I-graphify-vps-proof.md`.
 32. For the OpenWebUI knowledge graph memory loop, read `docs/v1.9J-knowledge-graph-memory-loop.md`.
+33. For docs-first graph answers in OpenWebUI, read `docs/v1.9K-graph-query-quality-upgrade.md`.
 
 ## Flagship Project
 
