@@ -196,3 +196,5 @@ Use Veloce MCPO Ruflo to run ruflo_plan for issue_id="VEL-128", title="Test Rufl
 ## Decision
 
 This completes the first practical Paperclip-to-Ruflo bridge without granting Ruflo production authority.
+
+The next safe bridge is `ruflo_execution_packet`, documented in `docs/mcpo-ruflo-execution-packet-tool.md`. It creates a human-approved Paperclip execution handoff without starting Ruflo runtime services.

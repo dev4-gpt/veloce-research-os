@@ -84,6 +84,7 @@ tools/
 13. For the v1.6 Ruflo planning closeout, read `docs/v1.6-ruflo-planning-closeout.md`.
 14. For the first read-only Ruflo cockpit integration, read `docs/mcpo-ruflo-status-tool.md`.
 15. For the first Paperclip-shaped Ruflo planning bridge, read `docs/mcpo-ruflo-plan-tool.md`.
+16. For the approval-gated Paperclip execution handoff, read `docs/mcpo-ruflo-execution-packet-tool.md`.
 
 ## Flagship Project
 
@@ -132,4 +133,5 @@ For the deployed service flow, v1.1 verifies Paperclip, Open WebUI, Hermes stand
 - Ruflo is installed and initialized only in `/opt/veloce-ruflo-sandbox` through a Node 20 container path, with daemon, swarm, memory, hooks, autopilot, Claude MCP, and Codex MCP disabled for production safety.
 - `ruflo_status` is implemented as the first read-only MCPO/OpenWebUI Ruflo integration path.
 - `ruflo_plan` is implemented as the first Paperclip-shaped planning-only bridge.
+- `ruflo_execution_packet` is implemented as the approval-gated Paperclip handoff for executing approved work through Codex/GitHub/VPS without enabling Ruflo runtime execution.
 - VEL-124 validation passed externally with `PYTHONPATH=. pytest -q`, producing `3 passed in 0.01s`.

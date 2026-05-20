@@ -145,6 +145,56 @@ class RufloStatusTests(unittest.TestCase):
         self.assertEqual(result["decision"], "blocked_execution_request")
         self.assertFalse(result["ruflo_runtime_invoked"])
 
+    def test_ruflo_execution_packet_requires_human_approval(self) -> None:
+        result = app._ruflo_execution_packet(
+            {
+                "title": "Execute approved handoff",
+                "description": "Create a Paperclip execution packet.",
+                "requested_mode": "execution_packet",
+            }
+        )
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["decision"], "blocked_missing_human_approval")
+        self.assertFalse(result["ruflo_runtime_invoked"])
+
+    def test_ruflo_execution_packet_returns_paperclip_handoff(self) -> None:
+        paths = self._with_hardened_paths()
+        try:
+            result = app._ruflo_execution_packet(
+                {
+                    "issue_id": "VEL-128",
+                    "title": "Execute approved Ruflo bridge verification",
+                    "description": "Complete the Paperclip execution loop after human approval.",
+                    "approved_by": "Aryaman",
+                    "approval": "human_approved",
+                    "execution_owner": "Codex/GitHub",
+                    "requested_mode": "execution_packet",
+                }
+            )
+            self.assertTrue(result["ok"])
+            self.assertEqual(result["service"], "veloce_ruflo_execution_packet")
+            self.assertEqual(result["decision"], "approval_gated_execution_packet_ready")
+            self.assertFalse(result["ruflo_runtime_invoked"])
+            self.assertIn("paperclip_comment_markdown", result)
+            self.assertIn("VEL-128", result["paperclip_comment_markdown"])
+            self.assertIn("verification_commands", result["execution_packet"])
+        finally:
+            self._restore_paths(*paths)
+
+    def test_ruflo_execution_packet_blocks_runtime_execution(self) -> None:
+        result = app._ruflo_execution_packet(
+            {
+                "title": "Start Ruflo runtime",
+                "description": "Start autopilot now.",
+                "approved_by": "Aryaman",
+                "approval": "human_approved",
+                "requested_mode": "execute",
+            }
+        )
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["decision"], "blocked_runtime_execution_request")
+        self.assertFalse(result["ruflo_runtime_invoked"])
+
 
 if __name__ == "__main__":
     unittest.main()

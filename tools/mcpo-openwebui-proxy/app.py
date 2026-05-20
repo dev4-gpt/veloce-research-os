@@ -182,6 +182,55 @@ def _openapi_spec() -> dict[str, Any]:
                     },
                 }
             },
+            "/ruflo_execution_packet": {
+                "post": {
+                    "operationId": "ruflo_execution_packet",
+                    "summary": "Create a human-approved execution packet from a Ruflo plan without running Ruflo.",
+                    "security": [{"bearerAuth": []}],
+                    "requestBody": {
+                        "required": True,
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "issue_id": {"type": "string"},
+                                        "title": {"type": "string"},
+                                        "description": {"type": "string"},
+                                        "plan_trace_id": {"type": "string"},
+                                        "approved_by": {"type": "string"},
+                                        "approval": {
+                                            "type": "string",
+                                            "default": "human_approved",
+                                        },
+                                        "execution_owner": {
+                                            "type": "string",
+                                            "default": "Codex/GitHub",
+                                        },
+                                        "labels": {
+                                            "type": "array",
+                                            "items": {"type": "string"},
+                                        },
+                                        "requested_mode": {
+                                            "type": "string",
+                                            "default": "execution_packet",
+                                        },
+                                    },
+                                    "required": ["title", "description", "approved_by"],
+                                    "additionalProperties": True,
+                                }
+                            }
+                        },
+                    },
+                    "responses": {
+                        "200": {
+                            "description": "Approval-gated execution packet result",
+                            "content": {"application/json": {"schema": {"type": "object"}}},
+                        },
+                        "401": {"description": "Unauthorized"},
+                    },
+                }
+            },
             "/get_current_time": {
                 "post": {
                     "operationId": "get_current_time",
@@ -720,6 +769,42 @@ def _paperclip_comment(plan: dict[str, Any]) -> str:
     )
 
 
+def _paperclip_execution_comment(packet: dict[str, Any]) -> str:
+    issue_id = packet["input"]["issue_id"] or "unassigned"
+    return "\n".join(
+        [
+            f"Ruflo approval-gated execution packet for {issue_id}.",
+            "",
+            f"Decision: {packet['decision']}",
+            f"Execution owner: {packet['execution_owner']}",
+            f"Approved by: {packet['approved_by']}",
+            "",
+            "Execution authority:",
+            packet["execution_authority"],
+            "",
+            "Next action:",
+            packet["next_action"],
+            "",
+            "Execution checklist:",
+            *[
+                f"- {step['name']}: {step['action']}"
+                for step in packet["execution_packet"]["steps"]
+            ],
+            "",
+            "Verification commands:",
+            "```bash",
+            *packet["execution_packet"]["verification_commands"],
+            "```",
+            "",
+            "Rollback:",
+            packet["execution_packet"]["rollback_note"],
+            "",
+            "Guardrail:",
+            "Ruflo still did not run production work. Paperclip records this packet; Codex/GitHub/VPS perform the approved implementation and verification.",
+        ]
+    )
+
+
 def _ruflo_plan(payload: dict[str, Any]) -> dict[str, Any]:
     trace_id = str(uuid.uuid4())
     started = time.time()
@@ -841,6 +926,164 @@ def _ruflo_plan(payload: dict[str, Any]) -> dict[str, Any]:
     return plan
 
 
+def _ruflo_execution_packet(payload: dict[str, Any]) -> dict[str, Any]:
+    trace_id = str(uuid.uuid4())
+    started = time.time()
+    mode = _as_string(payload.get("requested_mode"), "execution_packet").lower()
+    allowed_modes = {"execution_packet", "packet", "handoff", "approval_gated_execution"}
+    if mode not in allowed_modes:
+        return {
+            "ok": False,
+            "service": "veloce_ruflo_execution_packet",
+            "checked_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "trace_id": trace_id,
+            "decision": "blocked_runtime_execution_request",
+            "error": (
+                "This bridge only creates an approval-gated execution packet. "
+                "Use requested_mode=execution_packet; do not request runtime execution."
+            ),
+            "ruflo_runtime_invoked": False,
+            "production_enabled": False,
+        }
+
+    for key in ("allow_runtime_execution", "execute_now", "start_services", "write_changes"):
+        if payload.get(key) is True:
+            return {
+                "ok": False,
+                "service": "veloce_ruflo_execution_packet",
+                "checked_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                "trace_id": trace_id,
+                "decision": "blocked_runtime_execution_request",
+                "error": f"{key}=true is not allowed; create a packet only",
+                "ruflo_runtime_invoked": False,
+                "production_enabled": False,
+            }
+
+    title = _as_string(payload.get("title"))
+    description = _as_string(payload.get("description"))
+    approved_by = _as_string(payload.get("approved_by"))
+    approval = _as_string(payload.get("approval")).lower()
+    if not title or not description:
+        return {
+            "ok": False,
+            "service": "veloce_ruflo_execution_packet",
+            "checked_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "trace_id": trace_id,
+            "decision": "invalid_input",
+            "error": "title and description are required",
+            "ruflo_runtime_invoked": False,
+            "production_enabled": False,
+        }
+    if not approved_by or approval not in {"human_approved", "approved"}:
+        return {
+            "ok": False,
+            "service": "veloce_ruflo_execution_packet",
+            "checked_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "trace_id": trace_id,
+            "decision": "blocked_missing_human_approval",
+            "error": "approved_by and approval=human_approved are required",
+            "ruflo_runtime_invoked": False,
+            "production_enabled": False,
+        }
+
+    sandbox_status = _ruflo_status()
+    if not sandbox_status.get("ok"):
+        return {
+            "ok": False,
+            "service": "veloce_ruflo_execution_packet",
+            "checked_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "trace_id": trace_id,
+            "decision": "blocked_sandbox_not_ready",
+            "error": "Ruflo sandbox status is not healthy; refusing to create packet",
+            "sandbox_status": sandbox_status,
+            "ruflo_runtime_invoked": False,
+            "production_enabled": False,
+        }
+
+    issue_id = _as_string(payload.get("issue_id"))
+    labels = _as_labels(payload.get("labels"))
+    execution_owner = _as_string(payload.get("execution_owner"), "Codex/GitHub")
+    plan_trace_id = _as_string(payload.get("plan_trace_id"))
+    risk_level = _risk_level(title, description, labels)
+    verification_commands = [
+        "python3 -m unittest tools/mcpo-openwebui-proxy/tests/test_ruflo_status.py",
+        (
+            "curl -sS https://tools.srv1314350.hstgr.cloud/ruflo_status "
+            '-H "Authorization: Bearer $MCPO_API_KEY" '
+            '-H "Content-Type: application/json" '
+            "-d '{\"scope\":\"sandbox\"}' | python3 -m json.tool"
+        ),
+        "docker logs --tail=50 aiagency-mcpo-openwebui-proxy | grep ruflo",
+    ]
+
+    packet = {
+        "ok": True,
+        "service": "veloce_ruflo_execution_packet",
+        "checked_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "trace_id": trace_id,
+        "planner_engine": "veloce_guarded_executor_packet_v0.1",
+        "ruflo_runtime_invoked": False,
+        "production_enabled": False,
+        "decision": "approval_gated_execution_packet_ready",
+        "execution_authority": (
+            "manual_or_codex_only: Paperclip records the packet; Ruflo daemon, swarm, "
+            "memory, hooks, autopilot, Claude MCP autostart, and Codex MCP autostart remain disabled."
+        ),
+        "approved_by": approved_by,
+        "execution_owner": execution_owner,
+        "risk_level": risk_level,
+        "input": {
+            "issue_id": issue_id,
+            "title": title,
+            "labels": labels,
+            "plan_trace_id": plan_trace_id,
+        },
+        "next_action": (
+            "Post this packet to the Paperclip issue, execute approved code changes through "
+            "Codex/GitHub, verify on the VPS, then update Paperclip with command output and disposition."
+        ),
+        "execution_packet": {
+            "mode": "approval_gated_manual_execution",
+            "steps": [
+                {
+                    "name": "record_packet",
+                    "owner": "Paperclip operator",
+                    "action": "Paste paperclip_comment_markdown into the issue as the execution handoff.",
+                },
+                {
+                    "name": "implement_change",
+                    "owner": execution_owner,
+                    "action": "Make the approved repository or configuration change outside Ruflo runtime.",
+                },
+                {
+                    "name": "verify_vps",
+                    "owner": "VPS operator",
+                    "action": "Run the verification commands and capture proxy log proof.",
+                },
+                {
+                    "name": "close_issue",
+                    "owner": "Paperclip operator",
+                    "action": "Set the Paperclip disposition to done only after verification evidence exists.",
+                },
+            ],
+            "verification_commands": verification_commands,
+            "rollback_note": (
+                "Rollback is to revert the GitHub/Codex change or restore the previous compose file, "
+                "then redeploy the proxy. Ruflo services stay stopped throughout."
+            ),
+        },
+        "sandbox_summary": {
+            "sandbox_path": sandbox_status.get("sandbox_path"),
+            "mode": sandbox_status.get("mode"),
+            "production_enabled": sandbox_status.get("production_enabled"),
+            "all_checks_ok": sandbox_status.get("ok"),
+        },
+        "latency_ms": int((time.time() - started) * 1000),
+    }
+    packet["paperclip_comment_markdown"] = _paperclip_execution_comment(packet)
+    return packet
+
+
 class Handler(BaseHTTPRequestHandler):
     server_version = "VeloceMCPOProxy/0.1"
 
@@ -888,6 +1131,7 @@ class Handler(BaseHTTPRequestHandler):
             "/repo_status",
             "/ruflo_status",
             "/ruflo_plan",
+            "/ruflo_execution_packet",
             "/get_current_time",
             "/convert_time",
         }:
@@ -926,6 +1170,25 @@ class Handler(BaseHTTPRequestHandler):
                 )
                 return
             self._write_json(200, _ruflo_plan(payload))
+            return
+        if self.path == "/ruflo_execution_packet":
+            length = int(self.headers.get("content-length", "0"))
+            body = self.rfile.read(length) if length else b"{}"
+            try:
+                payload = json.loads(body.decode("utf-8"))
+                if not isinstance(payload, dict):
+                    raise ValueError("JSON payload must be an object")
+            except Exception as exc:
+                self._write_json(
+                    400,
+                    {
+                        "ok": False,
+                        "service": "veloce_ruflo_execution_packet",
+                        "error": f"invalid JSON payload: {exc}",
+                    },
+                )
+                return
+            self._write_json(200, _ruflo_execution_packet(payload))
             return
 
         length = int(self.headers.get("content-length", "0"))
