@@ -334,6 +334,8 @@ If a Paperclip agent says it cannot access `/root/veloce-research-os`, complete 
 - [ ] Run v1.7C stack-health monitor on the VPS and attach proxy log proof.
 - [x] Build v1.7D security and access review.
 - [ ] Run v1.7D security-access-review command on the VPS and attach report output.
+- [x] Build v1.7F rollback drill runbook and script.
+- [ ] Run v1.7F rollback drill on the VPS and attach stack-health proof.
 
 ## Recommended V1.3 Task
 

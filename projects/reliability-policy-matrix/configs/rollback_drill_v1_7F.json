@@ -1,0 +1,20 @@
+{
+  "generated_report": "artifacts/derived/rollback_drill_v1_7F.json",
+  "compose_dir": "/root/ai-agency",
+  "repo_dir": "/root/veloce-research-os",
+  "backup_root": "/root/veloce-backups",
+  "restore_root": "/root/veloce-restore-test",
+  "compose_files": [
+    "docker-compose.yml",
+    "docker-compose.status-tool.yml",
+    "docker-compose.mcpo.yml"
+  ],
+  "required_restore_files": [
+    "veloce-research-os/README.md",
+    "ai-agency/docker-compose.yml"
+  ],
+  "optional_restore_files": [
+    "veloce-ruflo-sandbox/.claude-flow/config.yaml"
+  ],
+  "rendered_compose_path": "/tmp/veloce-compose-rendered.yml"
+}

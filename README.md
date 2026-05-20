@@ -91,6 +91,7 @@ tools/
 20. For the VEL-130 backup and restore runbook, read `docs/v1.7B-backup-restore-runbook.md`.
 21. For the VEL-132 monitoring and alerting runbook, read `docs/v1.7C-monitoring-alerting-runbook.md`.
 22. For the VEL-134 security and access review, read `docs/v1.7D-security-access-review.md`.
+23. For the VEL-142 rollback drill runbook, read `docs/v1.7F-rollback-drill-runbook.md`.
 
 ## Flagship Project
 

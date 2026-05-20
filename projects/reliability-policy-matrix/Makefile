@@ -1,4 +1,4 @@
-.PHONY: matrix-plan run-sample aggregate-sample week1-plan week1-sample week1-full stack-health security-access-review test clean
+.PHONY: matrix-plan run-sample aggregate-sample week1-plan week1-sample week1-full stack-health security-access-review rollback-drill test clean
 
 PYTHON ?= python3
 
@@ -26,6 +26,9 @@ stack-health:
 
 security-access-review:
 	$(PYTHON) scripts/security_access_review.py --config configs/access_review_v1_7D.json
+
+rollback-drill:
+	$(PYTHON) scripts/rollback_drill.py --config configs/rollback_drill_v1_7F.json
 
 test:
 	$(PYTHON) -m unittest discover -s tests

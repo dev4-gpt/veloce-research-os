@@ -90,6 +90,21 @@ artifacts/derived/security_access_review_v1_7D.json
 artifacts/derived/security_access_review_v1_7D.md
 ```
 
+## V1.7F Rollback Drill
+
+Run on the VPS after at least one backup/restore-test path exists:
+
+```bash
+make rollback-drill
+make stack-health
+```
+
+The drill writes:
+
+```text
+artifacts/derived/rollback_drill_v1_7F.json
+```
+
 ## Outputs
 
 Generated outputs are written under:
