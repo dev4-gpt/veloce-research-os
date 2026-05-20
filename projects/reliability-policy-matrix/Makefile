@@ -1,4 +1,4 @@
-.PHONY: matrix-plan run-sample aggregate-sample week1-plan week1-sample week1-full test clean
+.PHONY: matrix-plan run-sample aggregate-sample week1-plan week1-sample week1-full stack-health test clean
 
 PYTHON ?= python3
 
@@ -20,6 +20,9 @@ week1-sample:
 
 week1-full:
 	sh scripts/week1_day1_3.sh
+
+stack-health:
+	$(PYTHON) scripts/stack_health_monitor.py --config configs/stack_health_v1_7C.json
 
 test:
 	$(PYTHON) -m unittest discover -s tests

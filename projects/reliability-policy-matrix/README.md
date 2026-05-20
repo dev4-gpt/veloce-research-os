@@ -55,6 +55,26 @@ make week1-sample
 make week1-full
 ```
 
+## V1.7C Stack Health Monitor
+
+Run from the VPS with `MCPO_API_KEY` loaded:
+
+```bash
+cd /root/ai-agency
+set -a
+source .env
+set +a
+
+cd /root/veloce-research-os/projects/reliability-policy-matrix
+make stack-health
+```
+
+The monitor writes:
+
+```text
+artifacts/derived/stack_health_v1_7C.json
+```
+
 ## Outputs
 
 Generated outputs are written under:

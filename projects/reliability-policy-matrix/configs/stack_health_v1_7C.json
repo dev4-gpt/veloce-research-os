@@ -1,0 +1,87 @@
+{
+  "generated_report": "artifacts/derived/stack_health_v1_7C.json",
+  "timeout_seconds": 10,
+  "checks": [
+    {
+      "name": "openwebui_public",
+      "method": "GET",
+      "url": "https://chat.srv1314350.hstgr.cloud",
+      "expected_http": 200
+    },
+    {
+      "name": "mcpo_openapi",
+      "method": "GET",
+      "url": "https://tools.srv1314350.hstgr.cloud/openapi.json",
+      "expected_http": 200,
+      "expect_json": {
+        "openapi": "3.0.3"
+      }
+    },
+    {
+      "name": "mcpo_stack_status",
+      "method": "POST",
+      "url": "https://tools.srv1314350.hstgr.cloud/stack_status",
+      "auth_env": "MCPO_API_KEY",
+      "request_json": {},
+      "expected_http": 200,
+      "expect_json": {
+        "ok": true,
+        "service": "veloce_stack_status"
+      }
+    },
+    {
+      "name": "mcpo_repo_status",
+      "method": "POST",
+      "url": "https://tools.srv1314350.hstgr.cloud/repo_status",
+      "auth_env": "MCPO_API_KEY",
+      "request_json": {},
+      "expected_http": 200,
+      "expect_json": {
+        "ok": true,
+        "service": "veloce_repo_status"
+      }
+    },
+    {
+      "name": "mcpo_ruflo_status",
+      "method": "POST",
+      "url": "https://tools.srv1314350.hstgr.cloud/ruflo_status",
+      "auth_env": "MCPO_API_KEY",
+      "request_json": {
+        "scope": "sandbox"
+      },
+      "expected_http": 200,
+      "expect_json": {
+        "ok": true,
+        "service": "veloce_ruflo_status",
+        "production_enabled": false
+      }
+    },
+    {
+      "name": "mcpo_ruflo_execution_packet",
+      "method": "POST",
+      "url": "https://tools.srv1314350.hstgr.cloud/ruflo_execution_packet",
+      "auth_env": "MCPO_API_KEY",
+      "request_json": {
+        "issue_id": "VEL-132",
+        "title": "v1.7C monitoring and alerting",
+        "description": "Monitoring check for approval-gated Ruflo execution packet.",
+        "approved_by": "Aryaman",
+        "approval": "human_approved",
+        "execution_owner": "VPS monitor",
+        "labels": [
+          "v1.7",
+          "monitoring"
+        ],
+        "requested_mode": "execution_packet"
+      },
+      "expected_http": 200,
+      "expect_json": {
+        "ok": true,
+        "service": "veloce_ruflo_execution_packet",
+        "decision": "approval_gated_execution_packet_ready",
+        "ruflo_runtime_invoked": false,
+        "production_enabled": false
+      }
+    }
+  ]
+}
