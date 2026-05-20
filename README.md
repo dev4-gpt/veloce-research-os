@@ -95,6 +95,7 @@ tools/
 24. For the unattended autonomous production plan, read `docs/v1.8-unattended-autonomy-plan.md`.
 25. For the production-level autonomy roadmap, read `docs/v1.8-production-level-next-steps.md`.
 26. For the v1.8C-J autonomy control closeout, read `docs/v1.8C-J-autonomy-control-closeout.md`.
+27. For the full-capability agentic product roadmap, read `docs/v1.9-full-capability-agentic-product-plan.md`.
 
 ## Flagship Project
 
