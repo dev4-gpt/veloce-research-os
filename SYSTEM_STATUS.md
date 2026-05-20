@@ -6,7 +6,16 @@ Date: 2026-05-19
 
 Veloce Research OS v1.6 is operational as a self-hosted research operating system running on the Hostinger VPS with Paperclip, Open WebUI, Hermes, direct NVIDIA model access, GitHub, Obsidian, a runnable research project scaffold, native Open WebUI tools, verified MCPO time/stack/repo bridges, and a gated Ruflo planning-only sandbox. The first read-only Ruflo cockpit integration, `ruflo_status`, is verified end to end. The first Paperclip-shaped planning bridge, `ruflo_plan`, is verified end to end. The approval-gated Paperclip execution handoff, `ruflo_execution_packet`, is verified from the VPS and Open WebUI.
 
-The system is ready for controlled use. Hermes standalone and Hermes memory persistence are verified. Paperclip-to-Hermes execution is verified through the HTTP wrapper path, but Hermes should not be used for exact tiny replies because its runtime context is token-heavy.
+The system is ready for controlled operator use. Hermes standalone and Hermes memory persistence are verified. Paperclip-to-Hermes execution is verified through the HTTP wrapper path, but Hermes should not be used for exact tiny replies because its runtime context is token-heavy.
+
+Production-readiness status:
+
+```text
+Operator beta: yes
+Unattended production: no
+Customer/SLA production: no
+Next gate: v1.7 production readiness audit
+```
 
 V1.2 core is verified: Open WebUI can call the `Veloce Status Check` tool through the native Open WebUI tool interface when using `openai/gpt-oss-120b`.
 
@@ -62,6 +71,7 @@ GitHub: https://github.com/dev4-gpt/veloce-research-os
 - V1.6 planning-only `ruflo_plan` support exists in the MCPO proxy and Open WebUI wrapper.
 - V1.6 approval-gated `ruflo_execution_packet` support exists in the MCPO proxy and Open WebUI wrapper.
 - V1.6 end-to-end demo proof is recorded in `docs/v1.6-end-to-end-ruflo-paperclip-demo.md`.
+- V1.7 production-readiness gate is documented in `docs/v1.7-production-readiness-plan.md`.
 - GitHub repository is populated and is the source of truth for code.
 - VPS can pull and run the GitHub repository.
 - Obsidian contains the exported research artifacts and operating notes.
@@ -317,6 +327,10 @@ If a Paperclip agent says it cannot access `/root/veloce-research-os`, complete 
 - [x] Deploy and verify approval-gated Open WebUI/MCPO `ruflo_execution_packet` endpoint on the VPS.
 - [x] Verify approval-gated Open WebUI/MCPO `ruflo_execution_packet` endpoint from Open WebUI chat.
 - [ ] Paste `paperclip_comment_markdown` into the relevant Paperclip issue and attach proxy log proof.
+- [ ] Run v1.7A production-readiness audit.
+- [ ] Build v1.7B backup and restore runbook.
+- [ ] Build v1.7C monitoring and alerting runbook or script.
+- [ ] Run v1.7D security and access review.
 
 ## Recommended V1.3 Task
 
