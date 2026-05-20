@@ -328,7 +328,8 @@ If a Paperclip agent says it cannot access `/root/veloce-research-os`, complete 
 - [x] Verify approval-gated Open WebUI/MCPO `ruflo_execution_packet` endpoint from Open WebUI chat.
 - [ ] Paste `paperclip_comment_markdown` into the relevant Paperclip issue and attach proxy log proof.
 - [ ] Run v1.7A production-readiness audit.
-- [ ] Build v1.7B backup and restore runbook.
+- [x] Build v1.7B backup and restore runbook.
+- [ ] Run v1.7B dated backup and non-destructive restore test on the VPS.
 - [ ] Build v1.7C monitoring and alerting runbook or script.
 - [ ] Run v1.7D security and access review.
 

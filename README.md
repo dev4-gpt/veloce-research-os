@@ -88,6 +88,7 @@ tools/
 17. For the first end-to-end OpenWebUI/MCPO/Ruflo/Paperclip demo proof, read `docs/v1.6-end-to-end-ruflo-paperclip-demo.md`.
 18. For the production-readiness gate and next Paperclip tasks, read `docs/v1.7-production-readiness-plan.md`.
 19. For the VEL-129 Paperclip runtime blocker workaround, read `docs/v1.7A-external-validation-unblock.md`.
+20. For the VEL-130 backup and restore runbook, read `docs/v1.7B-backup-restore-runbook.md`.
 
 ## Flagship Project
 
