@@ -104,6 +104,7 @@ tools/
 33. For docs-first graph answers in OpenWebUI, read `docs/v1.9K-graph-query-quality-upgrade.md`.
 34. For operating graph ingestion across Paperclip, Hermes, Ruflo, OpenWebUI, MCPO, Obsidian, and Graphify, read `docs/v1.9L-operating-graph-ingestion.md`.
 35. For operating-memory ranking in graph queries, read `docs/v1.9M-operating-graph-ranking-boost.md`.
+36. For markdown-first operating-memory ranking, read `docs/v1.9N-manifest-penalty-markdown-priority.md`.
 
 ## Flagship Project
 

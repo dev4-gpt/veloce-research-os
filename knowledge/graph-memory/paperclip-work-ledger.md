@@ -1,8 +1,8 @@
 ---
 title: Paperclip Work Ledger
 source_system: paperclip
-generated_at: 2026-05-20T21:23:34Z
-commit: 98f1e06
+generated_at: 2026-05-20T21:42:16Z
+commit: 32390c8
 tags: [paperclip, issues, tasks, evidence]
 ---
 
@@ -46,6 +46,9 @@ Paperclip is the issue, task, disposition, comment, and evidence ledger for Velo
 - `docs/v1.9I-obsidian-graphify-knowledge-layer.md`
 - `docs/v1.9J-knowledge-graph-memory-loop.md`
 - `docs/v1.9K-graph-query-quality-upgrade.md`
+- `docs/v1.9L-operating-graph-ingestion.md`
+- `docs/v1.9M-operating-graph-ranking-boost.md`
+- `docs/v1.9N-manifest-penalty-markdown-priority.md`
 
 ## Exported Issue And Task Metadata
 

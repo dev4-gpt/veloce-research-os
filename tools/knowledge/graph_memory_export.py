@@ -225,6 +225,8 @@ Obsidian stores readable markdown notes, issue evidence, runbooks, generated mem
 
 Graphify extracts a graph from code, docs, runbooks, and graph-memory markdown into `graphify-out/graph.json`.
 
+Graph-memory markdown files are the preferred human-facing evidence nodes. `manifest.json` exists for automation bookkeeping and should not outrank markdown notes in normal product queries.
+
 ## Chat Layer
 
 OpenWebUI calls `knowledge_graph_status`, `knowledge_graph_query`, and `knowledge_memory_record` through MCPO. The query endpoint uses docs-first ranking for product questions and can filter docs, code, tests, or all sources.

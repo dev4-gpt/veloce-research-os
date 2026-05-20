@@ -1658,6 +1658,11 @@ def _score_graph_node(
     source = _as_string(node.get("source_file")).lower()
     text = _graph_node_text(node).lower()
     question_lower = question.lower()
+    is_graph_memory = source.startswith("knowledge/graph-memory/")
+    is_graph_memory_markdown = is_graph_memory and source.endswith(".md")
+    is_graph_memory_manifest = source == "knowledge/graph-memory/manifest.json"
+    if source_filter == "docs" and is_graph_memory_manifest:
+        return 0
     score = 0
 
     for term in terms:
@@ -1678,8 +1683,14 @@ def _score_graph_node(
         score += 14 if intent in {"architecture", "memory", "general"} else 5
     if kind == "knowledge":
         score += 28 if intent in {"architecture", "memory", "general"} else 12
-    if source.startswith("knowledge/graph-memory/"):
+    if is_graph_memory:
         score += 16
+    if is_graph_memory_markdown:
+        score += 34
+    if is_graph_memory_manifest:
+        score -= 30
+    if source == "knowledge/graph-memory/veloce-operating-graph.md":
+        score += 55
     if source in {"readme.md", "system_status.md"}:
         score += 8
     if "v1.9" in source or "v1.9" in label:
@@ -1687,7 +1698,7 @@ def _score_graph_node(
     if "v1.9l" in source or "v1.9l" in label:
         score += 18
     if "operating graph" in question_lower and (
-        "operating graph" in text or source.startswith("knowledge/graph-memory/")
+        "operating graph" in text or is_graph_memory_markdown
     ):
         score += 80
     if kind == "tests":
@@ -1864,7 +1875,7 @@ def _knowledge_graph_query(payload: dict[str, Any]) -> dict[str, Any]:
         "question": question,
         "source": str(GRAPHIFY_GRAPH_PATH),
         "source_filter": source_filter,
-        "ranking_mode": f"v1.9M_weighted_{source_filter}_{intent}",
+        "ranking_mode": f"v1.9N_weighted_{source_filter}_{intent}",
         "summary_answer": summary_answer,
         "answer": (
             summary_answer

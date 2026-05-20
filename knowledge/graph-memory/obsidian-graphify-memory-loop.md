@@ -1,8 +1,8 @@
 ---
 title: Obsidian And Graphify Memory Loop
 source_system: obsidian-graphify
-generated_at: 2026-05-20T21:23:34Z
-commit: 98f1e06
+generated_at: 2026-05-20T21:42:17Z
+commit: 32390c8
 tags: [obsidian, graphify, memory]
 ---
 
@@ -15,6 +15,8 @@ Obsidian stores readable markdown notes, issue evidence, runbooks, generated mem
 ## Machine Layer
 
 Graphify extracts a graph from code, docs, runbooks, and graph-memory markdown into `graphify-out/graph.json`.
+
+Graph-memory markdown files are the preferred human-facing evidence nodes. `manifest.json` exists for automation bookkeeping and should not outrank markdown notes in normal product queries.
 
 ## Chat Layer
 

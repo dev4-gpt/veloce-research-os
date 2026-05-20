@@ -269,6 +269,13 @@ class RufloStatusTests(unittest.TestCase):
                                 "community": 4,
                             },
                             {
+                                "id": "manifest_mcpo_paths",
+                                "label": "mcpo_paths",
+                                "source_file": "knowledge/graph-memory/manifest.json",
+                                "source_location": "L11",
+                                "community": 4,
+                            },
+                            {
                                 "id": "v19l",
                                 "label": "V1.9L Operating Graph Ingestion Layer",
                                 "source_file": "docs/v1.9L-operating-graph-ingestion.md",
@@ -302,6 +309,12 @@ class RufloStatusTests(unittest.TestCase):
                                 "source_file": "knowledge/graph-memory/veloce-operating-graph.md",
                             },
                             {
+                                "source": "manifest_mcpo_paths",
+                                "target": "operating_graph",
+                                "relation": "summarizes",
+                                "source_file": "knowledge/graph-memory/manifest.json",
+                            },
+                            {
                                 "source": "ruflo_test",
                                 "target": "ruflo_code",
                                 "relation": "calls",
@@ -315,7 +328,7 @@ class RufloStatusTests(unittest.TestCase):
             app.GRAPHIFY_GRAPH_PATH = graph_path
             status = app._knowledge_graph_status()
             self.assertTrue(status["ok"])
-            self.assertEqual(status["nodes"], 6)
+            self.assertEqual(status["nodes"], 7)
 
             result = app._knowledge_graph_query(
                 {
@@ -325,7 +338,7 @@ class RufloStatusTests(unittest.TestCase):
             )
             self.assertTrue(result["ok"])
             self.assertEqual(result["source_filter"], "docs")
-            self.assertIn("v1.9M_weighted_docs", result["ranking_mode"])
+            self.assertIn("v1.9N_weighted_docs", result["ranking_mode"])
             self.assertIn("summary_answer", result)
             self.assertIn("matches", result)
             self.assertIn("relationships", result)
@@ -355,10 +368,14 @@ class RufloStatusTests(unittest.TestCase):
             )
             self.assertTrue(operating_result["ok"])
             self.assertEqual(operating_result["source_filter"], "docs")
-            self.assertIn("v1.9M_weighted_docs", operating_result["ranking_mode"])
+            self.assertIn("v1.9N_weighted_docs", operating_result["ranking_mode"])
             self.assertEqual(
                 operating_result["matches"][0]["source_file"],
                 "knowledge/graph-memory/veloce-operating-graph.md",
+            )
+            self.assertNotIn(
+                "knowledge/graph-memory/manifest.json",
+                {item["source_file"] for item in operating_result["matches"]},
             )
             self.assertIn(
                 "knowledge/graph-memory/veloce-operating-graph.md",
@@ -374,6 +391,10 @@ class RufloStatusTests(unittest.TestCase):
             )
             self.assertTrue(knowledge_result["ok"])
             self.assertEqual(knowledge_result["source_filter"], "knowledge")
+            self.assertEqual(
+                knowledge_result["matches"][0]["source_file"],
+                "knowledge/graph-memory/veloce-operating-graph.md",
+            )
             self.assertTrue(
                 all(
                     item["source_file"].startswith("knowledge/graph-memory/")

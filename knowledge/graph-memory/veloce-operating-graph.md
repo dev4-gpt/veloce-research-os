@@ -1,8 +1,8 @@
 ---
 title: Veloce Operating Graph
 source_system: veloce
-generated_at: 2026-05-20T21:23:34Z
-commit: 98f1e06
+generated_at: 2026-05-20T21:42:16Z
+commit: 32390c8
 tags: [veloce, architecture, graph-memory]
 ---
 
