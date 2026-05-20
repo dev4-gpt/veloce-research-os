@@ -46,6 +46,7 @@ docs/
   mcpo-stack-status-tool.md
   mcpo-repo-status-tool.md
   mcpo-ruflo-status-tool.md
+  mcpo-ruflo-plan-tool.md
   ruflo-sandbox-evaluation.md
   pipeline-setup.md
   v1.4-hermes-mcpo-ruflo-plan.md
@@ -82,6 +83,7 @@ tools/
 12. For the complete deployed pipeline and reproduction commands, read `docs/pipeline-setup.md`.
 13. For the v1.6 Ruflo planning closeout, read `docs/v1.6-ruflo-planning-closeout.md`.
 14. For the first read-only Ruflo cockpit integration, read `docs/mcpo-ruflo-status-tool.md`.
+15. For the first Paperclip-shaped Ruflo planning bridge, read `docs/mcpo-ruflo-plan-tool.md`.
 
 ## Flagship Project
 
@@ -129,4 +131,5 @@ For the deployed service flow, v1.1 verifies Paperclip, Open WebUI, Hermes stand
 - Hermes is available for memory and agent behavior experiments, but not for tiny exact-output acceptance tests.
 - Ruflo is installed and initialized only in `/opt/veloce-ruflo-sandbox` through a Node 20 container path, with daemon, swarm, memory, hooks, autopilot, Claude MCP, and Codex MCP disabled for production safety.
 - `ruflo_status` is implemented as the first read-only MCPO/OpenWebUI Ruflo integration path.
+- `ruflo_plan` is implemented as the first Paperclip-shaped planning-only bridge.
 - VEL-124 validation passed externally with `PYTHONPATH=. pytest -q`, producing `3 passed in 0.01s`.

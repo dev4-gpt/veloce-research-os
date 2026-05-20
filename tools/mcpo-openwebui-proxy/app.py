@@ -138,6 +138,50 @@ def _openapi_spec() -> dict[str, Any]:
                     },
                 }
             },
+            "/ruflo_plan": {
+                "post": {
+                    "operationId": "ruflo_plan",
+                    "summary": "Create a planning-only Ruflo bridge plan for a Paperclip issue.",
+                    "security": [{"bearerAuth": []}],
+                    "requestBody": {
+                        "required": True,
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "issue_id": {"type": "string"},
+                                        "title": {"type": "string"},
+                                        "description": {"type": "string"},
+                                        "priority": {"type": "string", "default": "medium"},
+                                        "assignee": {
+                                            "type": "string",
+                                            "default": "Technical Builder",
+                                        },
+                                        "labels": {
+                                            "type": "array",
+                                            "items": {"type": "string"},
+                                        },
+                                        "requested_mode": {
+                                            "type": "string",
+                                            "default": "plan",
+                                        },
+                                    },
+                                    "required": ["title", "description"],
+                                    "additionalProperties": True,
+                                }
+                            }
+                        },
+                    },
+                    "responses": {
+                        "200": {
+                            "description": "Planning-only bridge result",
+                            "content": {"application/json": {"schema": {"type": "object"}}},
+                        },
+                        "401": {"description": "Unauthorized"},
+                    },
+                }
+            },
             "/get_current_time": {
                 "post": {
                     "operationId": "get_current_time",
@@ -585,6 +629,218 @@ def _ruflo_status() -> dict[str, Any]:
     }
 
 
+def _as_string(value: Any, default: str = "") -> str:
+    if value is None:
+        return default
+    if isinstance(value, str):
+        return value.strip()
+    return str(value).strip()
+
+
+def _as_labels(value: Any) -> list[str]:
+    if isinstance(value, list):
+        return [_as_string(item) for item in value if _as_string(item)]
+    if isinstance(value, str):
+        return [item.strip() for item in value.split(",") if item.strip()]
+    return []
+
+
+def _risk_level(title: str, description: str, labels: list[str]) -> str:
+    text = " ".join([title, description, " ".join(labels)]).lower()
+    high_terms = [
+        "production",
+        "secret",
+        "api key",
+        "token",
+        "deploy",
+        "docker",
+        "paperclip mutation",
+        "github write",
+        "autopilot",
+        "daemon",
+        "swarm",
+    ]
+    medium_terms = ["integration", "openwebui", "mcpo", "hermes", "ruflo", "paperclip"]
+    if any(term in text for term in high_terms):
+        return "high"
+    if any(term in text for term in medium_terms):
+        return "medium"
+    return "low"
+
+
+def _blocked_execution_request(payload: dict[str, Any]) -> str | None:
+    mode = _as_string(payload.get("requested_mode"), "plan").lower()
+    if mode in {
+        "run",
+        "exec",
+        "execute",
+        "apply",
+        "deploy",
+        "mutate",
+        "write",
+        "autopilot",
+        "start",
+    }:
+        return f"requested_mode={mode} is not allowed for the planning bridge"
+
+    for key in ("allow_execution", "execute_now", "start_services", "write_changes"):
+        if payload.get(key) is True:
+            return f"{key}=true is not allowed for the planning bridge"
+
+    return None
+
+
+def _paperclip_comment(plan: dict[str, Any]) -> str:
+    issue_id = plan["input"]["issue_id"] or "unassigned"
+    return "\n".join(
+        [
+            f"Ruflo planning-only bridge result for {issue_id}.",
+            "",
+            f"Decision: {plan['decision']}",
+            f"Owner: {plan['owner']}",
+            f"Risk: {plan['risk_level']}",
+            "",
+            "Next action:",
+            plan["next_action"],
+            "",
+            "Verification command:",
+            "```bash",
+            plan["verification_command"],
+            "```",
+            "",
+            "Rollback note:",
+            plan["rollback_note"],
+            "",
+            "Approval gates:",
+            *[f"- {gate}" for gate in plan["approval_gates"]],
+            "",
+            "Guardrail:",
+            "Ruflo was not executed. Daemon, swarm, memory, hooks, autopilot, Claude MCP, and Codex MCP remain disabled.",
+        ]
+    )
+
+
+def _ruflo_plan(payload: dict[str, Any]) -> dict[str, Any]:
+    trace_id = str(uuid.uuid4())
+    started = time.time()
+    blocked_reason = _blocked_execution_request(payload)
+    if blocked_reason:
+        return {
+            "ok": False,
+            "service": "veloce_ruflo_plan",
+            "checked_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "trace_id": trace_id,
+            "decision": "blocked_execution_request",
+            "error": blocked_reason,
+            "ruflo_runtime_invoked": False,
+            "production_enabled": False,
+        }
+
+    title = _as_string(payload.get("title"))
+    description = _as_string(payload.get("description"))
+    if not title or not description:
+        return {
+            "ok": False,
+            "service": "veloce_ruflo_plan",
+            "checked_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "trace_id": trace_id,
+            "decision": "invalid_input",
+            "error": "title and description are required",
+            "ruflo_runtime_invoked": False,
+            "production_enabled": False,
+        }
+
+    sandbox_status = _ruflo_status()
+    if not sandbox_status.get("ok"):
+        return {
+            "ok": False,
+            "service": "veloce_ruflo_plan",
+            "checked_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "trace_id": trace_id,
+            "decision": "blocked_sandbox_not_ready",
+            "error": "Ruflo sandbox status is not healthy; refusing to plan",
+            "sandbox_status": sandbox_status,
+            "ruflo_runtime_invoked": False,
+            "production_enabled": False,
+        }
+
+    issue_id = _as_string(payload.get("issue_id"))
+    priority = _as_string(payload.get("priority"), "medium").lower()
+    assignee = _as_string(payload.get("assignee"), "Technical Builder")
+    labels = _as_labels(payload.get("labels"))
+    risk_level = _risk_level(title, description, labels)
+    owner = assignee or ("CEO" if risk_level == "high" else "Technical Builder")
+
+    verification_command = (
+        "curl -sS https://tools.srv1314350.hstgr.cloud/ruflo_status "
+        '-H "Authorization: Bearer $MCPO_API_KEY" '
+        '-H "Content-Type: application/json" '
+        "-d '{\"scope\":\"sandbox\"}' | python3 -m json.tool"
+    )
+    next_action = (
+        "Create a human-reviewed implementation issue from this plan, keep Ruflo in "
+        "planning-only mode, and execute changes through GitHub/Codex with targeted tests."
+    )
+    if risk_level == "low":
+        next_action = (
+            "Use this plan as the implementation checklist, then run the listed "
+            "verification command before marking the issue done."
+        )
+    elif risk_level == "high":
+        next_action = (
+            "Route this plan to human review before implementation because it touches "
+            "production-sensitive surfaces or orchestration controls."
+        )
+
+    plan = {
+        "ok": True,
+        "service": "veloce_ruflo_plan",
+        "checked_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "trace_id": trace_id,
+        "planner_engine": "veloce_guarded_planner_v0.1",
+        "ruflo_runtime_invoked": False,
+        "production_enabled": False,
+        "input": {
+            "issue_id": issue_id,
+            "title": title,
+            "priority": priority,
+            "assignee": assignee,
+            "labels": labels,
+        },
+        "decision": "plan_only_ready",
+        "owner": owner,
+        "risk_level": risk_level,
+        "next_action": next_action,
+        "verification_command": verification_command,
+        "rollback_note": (
+            "No production mutation was performed by this bridge. Rollback is to discard "
+            "the generated plan/comment and leave Ruflo services stopped."
+        ),
+        "deliverables": [
+            "human-reviewed implementation issue",
+            "targeted code or configuration change",
+            "verification command output",
+            "Paperclip disposition comment",
+        ],
+        "approval_gates": [
+            "human approval before any production write",
+            "no secrets mounted into Ruflo",
+            "no daemon/swarm/memory/hooks/autopilot start",
+            "GitHub commit required for durable code changes",
+            "VPS verification required before done",
+        ],
+        "sandbox_summary": {
+            "sandbox_path": sandbox_status.get("sandbox_path"),
+            "mode": sandbox_status.get("mode"),
+            "production_enabled": sandbox_status.get("production_enabled"),
+            "all_checks_ok": sandbox_status.get("ok"),
+        },
+        "latency_ms": int((time.time() - started) * 1000),
+    }
+    plan["paperclip_comment_markdown"] = _paperclip_comment(plan)
+    return plan
+
+
 class Handler(BaseHTTPRequestHandler):
     server_version = "VeloceMCPOProxy/0.1"
 
@@ -631,6 +887,7 @@ class Handler(BaseHTTPRequestHandler):
             "/stack_status",
             "/repo_status",
             "/ruflo_status",
+            "/ruflo_plan",
             "/get_current_time",
             "/convert_time",
         }:
@@ -650,6 +907,25 @@ class Handler(BaseHTTPRequestHandler):
             return
         if self.path == "/ruflo_status":
             self._write_json(200, _ruflo_status())
+            return
+        if self.path == "/ruflo_plan":
+            length = int(self.headers.get("content-length", "0"))
+            body = self.rfile.read(length) if length else b"{}"
+            try:
+                payload = json.loads(body.decode("utf-8"))
+                if not isinstance(payload, dict):
+                    raise ValueError("JSON payload must be an object")
+            except Exception as exc:
+                self._write_json(
+                    400,
+                    {
+                        "ok": False,
+                        "service": "veloce_ruflo_plan",
+                        "error": f"invalid JSON payload: {exc}",
+                    },
+                )
+                return
+            self._write_json(200, _ruflo_plan(payload))
             return
 
         length = int(self.headers.get("content-length", "0"))

@@ -13,97 +13,137 @@ import app  # noqa: E402
 
 
 class RufloStatusTests(unittest.TestCase):
-    def test_ruflo_status_reports_hardened_sandbox(self) -> None:
-        with tempfile.TemporaryDirectory() as temp:
-            root = Path(temp)
-            sandbox = root / "sandbox"
-            repo = root / "repo"
-            (sandbox / ".claude-flow").mkdir(parents=True)
-            (sandbox / ".claude").mkdir()
-            (sandbox / ".agents").mkdir()
-            (repo / "docs").mkdir(parents=True)
+    def _with_hardened_paths(self):
+        temp = tempfile.TemporaryDirectory()
+        root = Path(temp.name)
+        sandbox = root / "sandbox"
+        repo = root / "repo"
+        (sandbox / ".claude-flow").mkdir(parents=True)
+        (sandbox / ".claude").mkdir()
+        (sandbox / ".agents").mkdir()
+        (repo / "docs").mkdir(parents=True)
 
-            (sandbox / ".claude-flow" / "config.yaml").write_text(
-                "\n".join(
-                    [
-                        "swarm:",
-                        "  maxAgents: 1",
-                        "  autoScale: false",
-                        "hooks:",
-                        "  autoExecute: false",
-                        "mcp:",
-                        "  autoStart: false",
-                    ]
-                ),
-                encoding="utf-8",
-            )
-            (sandbox / ".claude" / "settings.json").write_text(
-                json.dumps(
-                    {
-                        "permissions": {
-                            "allow": [],
-                            "deny": ["Bash(*)", "Write(*)", "Edit(*)"],
-                        },
-                        "env": {
-                            "CLAUDE_FLOW_V3_ENABLED": "false",
-                            "CLAUDE_FLOW_HOOKS_ENABLED": "false",
-                        },
-                        "claudeFlow": {
-                            "enabled": False,
-                            "daemon": {"autoStart": False},
-                        },
-                    }
-                ),
-                encoding="utf-8",
-            )
-            (sandbox / ".agents" / "config.toml").write_text(
-                '\n'.join(
-                    [
-                        'approval_policy = "on-request"',
-                        'sandbox_mode = "workspace-write"',
-                        'exclude = ["*_KEY", "*_SECRET"]',
-                    ]
-                ),
-                encoding="utf-8",
-            )
-            (sandbox / ".mcp.json").write_text(
-                json.dumps(
-                    {
-                        "mcpServers": {
-                            "ruflo": {
-                                "autoStart": False,
-                                "env": {
-                                    "CLAUDE_FLOW_HOOKS_ENABLED": "false",
-                                    "CLAUDE_FLOW_MAX_AGENTS": "1",
-                                },
-                            }
+        (sandbox / ".claude-flow" / "config.yaml").write_text(
+            "\n".join(
+                [
+                    "swarm:",
+                    "  maxAgents: 1",
+                    "  autoScale: false",
+                    "hooks:",
+                    "  autoExecute: false",
+                    "mcp:",
+                    "  autoStart: false",
+                ]
+            ),
+            encoding="utf-8",
+        )
+        (sandbox / ".claude" / "settings.json").write_text(
+            json.dumps(
+                {
+                    "permissions": {
+                        "allow": [],
+                        "deny": ["Bash(*)", "Write(*)", "Edit(*)"],
+                    },
+                    "env": {
+                        "CLAUDE_FLOW_V3_ENABLED": "false",
+                        "CLAUDE_FLOW_HOOKS_ENABLED": "false",
+                    },
+                    "claudeFlow": {
+                        "enabled": False,
+                        "daemon": {"autoStart": False},
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+        (sandbox / ".agents" / "config.toml").write_text(
+            '\n'.join(
+                [
+                    'approval_policy = "on-request"',
+                    'sandbox_mode = "workspace-write"',
+                    'exclude = ["*_KEY", "*_SECRET"]',
+                ]
+            ),
+            encoding="utf-8",
+        )
+        (sandbox / ".mcp.json").write_text(
+            json.dumps(
+                {
+                    "mcpServers": {
+                        "ruflo": {
+                            "autoStart": False,
+                            "env": {
+                                "CLAUDE_FLOW_HOOKS_ENABLED": "false",
+                                "CLAUDE_FLOW_MAX_AGENTS": "1",
+                            },
                         }
                     }
-                ),
-                encoding="utf-8",
-            )
-            (sandbox / "AGENTS.md").write_text("agents", encoding="utf-8")
-            (sandbox / "CLAUDE.md").write_text("claude", encoding="utf-8")
-            (repo / "docs" / "v1.6-ruflo-planning-closeout.md").write_text(
-                "PYTHONPATH=. pytest -q\n3 passed in 0.01s\n",
-                encoding="utf-8",
-            )
+                }
+            ),
+            encoding="utf-8",
+        )
+        (sandbox / "AGENTS.md").write_text("agents", encoding="utf-8")
+        (sandbox / "CLAUDE.md").write_text("claude", encoding="utf-8")
+        (repo / "docs" / "v1.6-ruflo-planning-closeout.md").write_text(
+            "PYTHONPATH=. pytest -q\n3 passed in 0.01s\n",
+            encoding="utf-8",
+        )
 
-            original_sandbox = app.RUFLO_SANDBOX_PATH
-            original_repo = app.RESEARCH_REPO_PATH
-            try:
-                app.RUFLO_SANDBOX_PATH = sandbox
-                app.RESEARCH_REPO_PATH = repo
-                result = app._ruflo_status()
-            finally:
-                app.RUFLO_SANDBOX_PATH = original_sandbox
-                app.RESEARCH_REPO_PATH = original_repo
+        original_sandbox = app.RUFLO_SANDBOX_PATH
+        original_repo = app.RESEARCH_REPO_PATH
+        app.RUFLO_SANDBOX_PATH = sandbox
+        app.RESEARCH_REPO_PATH = repo
+        return temp, original_sandbox, original_repo
 
-        self.assertTrue(result["ok"])
-        self.assertFalse(result["production_enabled"])
-        self.assertEqual(result["mode"], "read_only_status")
-        self.assertTrue(result["checks"]["runtime_hardened"]["ok"])
-        self.assertTrue(result["checks"]["vel_124_validation"]["ok"])
+    def _restore_paths(self, temp, original_sandbox, original_repo) -> None:
+        app.RUFLO_SANDBOX_PATH = original_sandbox
+        app.RESEARCH_REPO_PATH = original_repo
+        temp.cleanup()
+
+    def test_ruflo_status_reports_hardened_sandbox(self) -> None:
+        paths = self._with_hardened_paths()
+        try:
+            result = app._ruflo_status()
+            self.assertTrue(result["ok"])
+            self.assertFalse(result["production_enabled"])
+            self.assertEqual(result["mode"], "read_only_status")
+            self.assertTrue(result["checks"]["runtime_hardened"]["ok"])
+            self.assertTrue(result["checks"]["vel_124_validation"]["ok"])
+        finally:
+            self._restore_paths(*paths)
+
+    def test_ruflo_plan_returns_paperclip_ready_plan(self) -> None:
+        paths = self._with_hardened_paths()
+        try:
+            result = app._ruflo_plan(
+                {
+                    "issue_id": "VEL-128",
+                    "title": "Plan read-only Ruflo bridge",
+                    "description": "Create an approval-gated plan for Paperclip.",
+                    "assignee": "Technical Builder",
+                    "requested_mode": "plan",
+                }
+            )
+            self.assertTrue(result["ok"])
+            self.assertEqual(result["service"], "veloce_ruflo_plan")
+            self.assertEqual(result["decision"], "plan_only_ready")
+            self.assertFalse(result["ruflo_runtime_invoked"])
+            self.assertIn("paperclip_comment_markdown", result)
+            self.assertIn("VEL-128", result["paperclip_comment_markdown"])
+        finally:
+            self._restore_paths(*paths)
+
+    def test_ruflo_plan_blocks_execution_mode(self) -> None:
+        result = app._ruflo_plan(
+            {
+                "title": "Deploy Ruflo",
+                "description": "Start services now.",
+                "requested_mode": "execute",
+            }
+        )
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["decision"], "blocked_execution_request")
+        self.assertFalse(result["ruflo_runtime_invoked"])
 
 
 if __name__ == "__main__":

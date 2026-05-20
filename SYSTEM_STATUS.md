@@ -4,7 +4,7 @@ Date: 2026-05-19
 
 ## Summary
 
-Veloce Research OS v1.6 is operational as a self-hosted research operating system running on the Hostinger VPS with Paperclip, Open WebUI, Hermes, direct NVIDIA model access, GitHub, Obsidian, a runnable research project scaffold, native Open WebUI tools, verified MCPO time/stack/repo bridges, and a gated Ruflo planning-only sandbox. The first read-only Ruflo cockpit integration, `ruflo_status`, is implemented in the repository and ready for VPS deploy/verification.
+Veloce Research OS v1.6 is operational as a self-hosted research operating system running on the Hostinger VPS with Paperclip, Open WebUI, Hermes, direct NVIDIA model access, GitHub, Obsidian, a runnable research project scaffold, native Open WebUI tools, verified MCPO time/stack/repo bridges, and a gated Ruflo planning-only sandbox. The first read-only Ruflo cockpit integration, `ruflo_status`, is verified end to end. The first Paperclip-shaped planning bridge, `ruflo_plan`, is implemented in the repository and ready for VPS deploy/verification.
 
 The system is ready for controlled use. Hermes standalone and Hermes memory persistence are verified. Paperclip-to-Hermes execution is verified through the HTTP wrapper path, but Hermes should not be used for exact tiny replies because its runtime context is token-heavy.
 
@@ -59,6 +59,7 @@ GitHub: https://github.com/dev4-gpt/veloce-research-os
 - V1.5 repo support exists for read-only `repo_status`.
 - V1.6 planning-only Ruflo bridge validation passed in the Paperclip workspace.
 - V1.6 read-only `ruflo_status` support exists in the MCPO proxy and Open WebUI wrapper.
+- V1.6 planning-only `ruflo_plan` support exists in the MCPO proxy and Open WebUI wrapper.
 - GitHub repository is populated and is the source of truth for code.
 - VPS can pull and run the GitHub repository.
 - Obsidian contains the exported research artifacts and operating notes.
@@ -226,6 +227,7 @@ Current Ruflo sandbox docs:
 ```text
 docs/ruflo-sandbox-evaluation.md
 docs/mcpo-ruflo-status-tool.md
+docs/mcpo-ruflo-plan-tool.md
 docs/v1.6-ruflo-planning-closeout.md
 docs/pipeline-setup.md
 ```
@@ -306,7 +308,9 @@ If a Paperclip agent says it cannot access `/root/veloce-research-os`, complete 
 - [x] Evaluate Ruflo in isolated planning-only sandbox after human approval.
 - [x] Validate VEL-124 planning-only Ruflo sandbox bridge tests externally.
 - [x] Implement read-only Open WebUI/MCPO `ruflo_status` endpoint.
-- [ ] Deploy and verify read-only Open WebUI/MCPO `ruflo_status` endpoint on the VPS.
+- [x] Deploy and verify read-only Open WebUI/MCPO `ruflo_status` endpoint on the VPS.
+- [x] Implement Paperclip-shaped planning-only Open WebUI/MCPO `ruflo_plan` endpoint.
+- [ ] Deploy and verify Paperclip-shaped planning-only Open WebUI/MCPO `ruflo_plan` endpoint on the VPS.
 
 ## Recommended V1.3 Task
 
@@ -326,6 +330,7 @@ docs/mcpo-ruflo-setup.md
 docs/mcpo-stack-status-tool.md
 docs/mcpo-repo-status-tool.md
 docs/mcpo-ruflo-status-tool.md
+docs/mcpo-ruflo-plan-tool.md
 docs/ruflo-sandbox-evaluation.md
 docs/v1.6-ruflo-planning-closeout.md
 docs/pipeline-setup.md

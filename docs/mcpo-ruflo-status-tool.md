@@ -134,3 +134,5 @@ Use Veloce MCPO Ruflo to run ruflo_status with scope="sandbox". Return only the 
 ## Decision
 
 This completes the first real Ruflo integration step because the production cockpit can see Ruflo sandbox readiness without granting Ruflo production execution authority.
+
+The next bridge is `ruflo_plan`, documented in `docs/mcpo-ruflo-plan-tool.md`.
