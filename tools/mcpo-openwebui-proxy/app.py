@@ -385,7 +385,7 @@ def _openapi_spec() -> dict[str, Any]:
                                         "max_results": {"type": "integer", "default": 8},
                                         "source_filter": {
                                             "type": "string",
-                                            "enum": ["docs", "code", "tests", "all"],
+                                            "enum": ["docs", "knowledge", "code", "tests", "all"],
                                             "default": "docs",
                                         },
                                         "include_relationships": {"type": "boolean", "default": True},
@@ -1591,6 +1591,8 @@ PRODUCT_GRAPH_TERMS = {
     "obsidian",
     "graphify",
     "graph.json",
+    "operating graph",
+    "graph-memory",
 }
 
 
@@ -1598,6 +1600,8 @@ def _graph_source_kind(node: dict[str, Any]) -> str:
     source = _as_string(node.get("source_file")).lower()
     if not source:
         return "other"
+    if source.startswith("knowledge/graph-memory/"):
+        return "knowledge"
     if source.startswith("docs/") or source in {"readme.md", "system_status.md"}:
         return "docs"
     if "/tests/" in source or source.startswith("tests/") or source.endswith("_test.py") or "test_" in source:
@@ -1624,11 +1628,19 @@ def _graph_question_intent(question: str) -> str:
 
 def _normalize_graph_source_filter(value: Any, intent: str) -> str:
     source_filter = _as_string(value).lower()
-    if source_filter in {"docs", "code", "tests", "all"}:
+    if source_filter in {"docs", "knowledge", "code", "tests", "all"}:
         return source_filter
     if intent in {"proof", "code"} and source_filter == "":
         return "all"
     return "docs"
+
+
+def _graph_source_allowed(kind: str, source_filter: str) -> bool:
+    if source_filter == "all":
+        return True
+    if source_filter == "docs":
+        return kind in {"docs", "knowledge"}
+    return kind == source_filter
 
 
 def _score_graph_node(
@@ -1639,7 +1651,7 @@ def _score_graph_node(
     intent: str,
 ) -> int:
     kind = _graph_source_kind(node)
-    if source_filter != "all" and kind != source_filter:
+    if not _graph_source_allowed(kind, source_filter):
         return 0
 
     label = _as_string(node.get("label")).lower()
@@ -1664,10 +1676,20 @@ def _score_graph_node(
         return 0
     if kind == "docs":
         score += 14 if intent in {"architecture", "memory", "general"} else 5
+    if kind == "knowledge":
+        score += 28 if intent in {"architecture", "memory", "general"} else 12
+    if source.startswith("knowledge/graph-memory/"):
+        score += 16
     if source in {"readme.md", "system_status.md"}:
         score += 8
     if "v1.9" in source or "v1.9" in label:
         score += 5
+    if "v1.9l" in source or "v1.9l" in label:
+        score += 18
+    if "operating graph" in question_lower and (
+        "operating graph" in text or source.startswith("knowledge/graph-memory/")
+    ):
+        score += 80
     if kind == "tests":
         score += 12 if source_filter == "tests" or intent == "proof" else -12
     if kind == "code" and intent in {"architecture", "memory", "general"}:
@@ -1783,7 +1805,8 @@ def _knowledge_graph_query(payload: dict[str, Any]) -> dict[str, Any]:
         score = _score_graph_node(node, terms, question, source_filter, intent)
         if score:
             scored.append((score, _graph_source_kind(node), node))
-    scored.sort(key=lambda item: (-item[0], item[1] != "docs", _as_string(item[2].get("label"))))
+    source_priority = {"knowledge": 0, "docs": 1, "code": 2, "config": 3, "tests": 4, "other": 5}
+    scored.sort(key=lambda item: (-item[0], source_priority.get(item[1], 9), _as_string(item[2].get("label"))))
     matches = [node for _, _, node in scored[:max_results]]
     match_ids = {node.get("id") for node in matches}
     neighbor_edges = [
@@ -1841,7 +1864,7 @@ def _knowledge_graph_query(payload: dict[str, Any]) -> dict[str, Any]:
         "question": question,
         "source": str(GRAPHIFY_GRAPH_PATH),
         "source_filter": source_filter,
-        "ranking_mode": f"v1.9K_weighted_{source_filter}_{intent}",
+        "ranking_mode": f"v1.9M_weighted_{source_filter}_{intent}",
         "summary_answer": summary_answer,
         "answer": (
             summary_answer

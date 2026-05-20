@@ -146,7 +146,7 @@ class Tools:
         Args:
             question: Knowledge graph question about Veloce docs, code, runbooks, or architecture.
             max_results: Maximum graph nodes/evidence docs to return.
-            source_filter: docs, code, tests, or all. Defaults to docs for product/architecture analysis.
+            source_filter: docs, knowledge, code, tests, or all. Defaults to docs for product/architecture analysis.
             answer_style: summary for a graph-grounded narrative, or raw for compact legacy output.
             include_relationships: Include nearby graph relationships in the response.
         """

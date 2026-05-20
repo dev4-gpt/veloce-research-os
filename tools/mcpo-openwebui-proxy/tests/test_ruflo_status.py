@@ -263,6 +263,18 @@ class RufloStatusTests(unittest.TestCase):
                                 "community": 1,
                             },
                             {
+                                "id": "operating_graph",
+                                "label": "Veloce Operating Graph",
+                                "source_file": "knowledge/graph-memory/veloce-operating-graph.md",
+                                "community": 4,
+                            },
+                            {
+                                "id": "v19l",
+                                "label": "V1.9L Operating Graph Ingestion Layer",
+                                "source_file": "docs/v1.9L-operating-graph-ingestion.md",
+                                "community": 4,
+                            },
+                            {
                                 "id": "ruflo_test",
                                 "label": ".test_ruflo_execution_packet_returns_paperclip_handoff()",
                                 "source_file": "tools/mcpo-openwebui-proxy/tests/test_ruflo_status.py",
@@ -284,6 +296,12 @@ class RufloStatusTests(unittest.TestCase):
                                 "source_file": "docs/v1.9-full-capability-agentic-product-plan.md",
                             },
                             {
+                                "source": "operating_graph",
+                                "target": "v19l",
+                                "relation": "references",
+                                "source_file": "knowledge/graph-memory/veloce-operating-graph.md",
+                            },
+                            {
                                 "source": "ruflo_test",
                                 "target": "ruflo_code",
                                 "relation": "calls",
@@ -297,7 +315,7 @@ class RufloStatusTests(unittest.TestCase):
             app.GRAPHIFY_GRAPH_PATH = graph_path
             status = app._knowledge_graph_status()
             self.assertTrue(status["ok"])
-            self.assertEqual(status["nodes"], 4)
+            self.assertEqual(status["nodes"], 6)
 
             result = app._knowledge_graph_query(
                 {
@@ -307,14 +325,17 @@ class RufloStatusTests(unittest.TestCase):
             )
             self.assertTrue(result["ok"])
             self.assertEqual(result["source_filter"], "docs")
-            self.assertIn("v1.9K_weighted_docs", result["ranking_mode"])
+            self.assertIn("v1.9M_weighted_docs", result["ranking_mode"])
             self.assertIn("summary_answer", result)
             self.assertIn("matches", result)
             self.assertIn("relationships", result)
             self.assertIn("evidence_docs", result)
             self.assertTrue(result["matches"])
             self.assertTrue(
-                all(item["source_file"].startswith("docs/") for item in result["matches"])
+                all(
+                    item["source_file"].startswith(("docs/", "knowledge/graph-memory/"))
+                    for item in result["matches"]
+                )
             )
             self.assertEqual(
                 result["matches"][0]["source_file"],
@@ -323,6 +344,41 @@ class RufloStatusTests(unittest.TestCase):
             self.assertIn(
                 "docs/v1.9-full-capability-agentic-product-plan.md",
                 result["evidence_docs"],
+            )
+
+            operating_result = app._knowledge_graph_query(
+                {
+                    "question": "what is the Veloce operating graph across Paperclip, Hermes, Ruflo, OpenWebUI, MCPO, Obsidian, and Graphify?",
+                    "max_results": 4,
+                    "source_filter": "docs",
+                }
+            )
+            self.assertTrue(operating_result["ok"])
+            self.assertEqual(operating_result["source_filter"], "docs")
+            self.assertIn("v1.9M_weighted_docs", operating_result["ranking_mode"])
+            self.assertEqual(
+                operating_result["matches"][0]["source_file"],
+                "knowledge/graph-memory/veloce-operating-graph.md",
+            )
+            self.assertIn(
+                "knowledge/graph-memory/veloce-operating-graph.md",
+                operating_result["evidence_docs"],
+            )
+
+            knowledge_result = app._knowledge_graph_query(
+                {
+                    "question": "operating graph",
+                    "max_results": 4,
+                    "source_filter": "knowledge",
+                }
+            )
+            self.assertTrue(knowledge_result["ok"])
+            self.assertEqual(knowledge_result["source_filter"], "knowledge")
+            self.assertTrue(
+                all(
+                    item["source_file"].startswith("knowledge/graph-memory/")
+                    for item in knowledge_result["matches"]
+                )
             )
 
             tests_result = app._knowledge_graph_query(
