@@ -100,6 +100,7 @@ tools/
 29. For a public-safe preview page, deploy `showcase/` to Vercel or Netlify.
 30. For the Obsidian + Graphify knowledge layer, read `docs/v1.9I-obsidian-graphify-knowledge-layer.md`.
 31. For the VPS Graphify proof, read `docs/v1.9I-graphify-vps-proof.md`.
+32. For the OpenWebUI knowledge graph memory loop, read `docs/v1.9J-knowledge-graph-memory-loop.md`.
 
 ## Flagship Project
 

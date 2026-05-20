@@ -236,6 +236,89 @@ class RufloStatusTests(unittest.TestCase):
         self.assertIn("/hermes_memory_query", paths)
         self.assertIn("/hermes_agent_task", paths)
         self.assertIn("/ruflo_orchestration_dry_run", paths)
+        self.assertIn("/knowledge_graph_status", paths)
+        self.assertIn("/knowledge_graph_query", paths)
+        self.assertIn("/knowledge_memory_record", paths)
+
+    def test_knowledge_graph_query_returns_matches(self) -> None:
+        temp = tempfile.TemporaryDirectory()
+        original_graph = app.GRAPHIFY_GRAPH_PATH
+        try:
+            graph_path = Path(temp.name) / "graph.json"
+            graph_path.write_text(
+                json.dumps(
+                    {
+                        "built_at_commit": "abc123",
+                        "nodes": [
+                            {
+                                "id": "openwebui",
+                                "label": "OpenWebUI",
+                                "source_file": "docs/v1.9.md",
+                                "community": 1,
+                            },
+                            {
+                                "id": "ruflo",
+                                "label": "Ruflo orchestration",
+                                "source_file": "docs/v1.9.md",
+                                "community": 1,
+                            },
+                        ],
+                        "links": [
+                            {
+                                "source": "openwebui",
+                                "target": "ruflo",
+                                "relation": "calls",
+                                "source_file": "docs/v1.9.md",
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            app.GRAPHIFY_GRAPH_PATH = graph_path
+            status = app._knowledge_graph_status()
+            self.assertTrue(status["ok"])
+            self.assertEqual(status["nodes"], 2)
+
+            result = app._knowledge_graph_query(
+                {"question": "How does OpenWebUI connect to Ruflo?", "max_results": 4}
+            )
+            self.assertTrue(result["ok"])
+            labels = {item["label"] for item in result["matches"]}
+            self.assertIn("OpenWebUI", labels)
+            self.assertIn("docs/v1.9.md", result["evidence_docs"])
+        finally:
+            app.GRAPHIFY_GRAPH_PATH = original_graph
+            temp.cleanup()
+
+    def test_knowledge_memory_record_blocks_secret_like_content(self) -> None:
+        result = app._knowledge_memory_record(
+            {
+                "source_system": "openwebui",
+                "event_type": "tool_call",
+                "summary": "Bearer abcdefghijklmnopqrstuvwxyz should not be recorded",
+            }
+        )
+
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["decision"], "blocked_secret_like_content")
+
+    def test_knowledge_memory_record_returns_obsidian_packet(self) -> None:
+        result = app._knowledge_memory_record(
+            {
+                "source_system": "openwebui",
+                "event_type": "tool_call",
+                "summary": "User queried Veloce Graphify status from chat.",
+                "tags": ["graphify", "openwebui"],
+                "evidence_refs": ["docs/v1.9I-graphify-vps-proof.md"],
+                "dry_run": True,
+            }
+        )
+
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["decision"], "memory_record_ready")
+        self.assertFalse(result["record_written"])
+        self.assertIn("Obsidian human memory", result["obsidian_markdown"])
 
 
 if __name__ == "__main__":

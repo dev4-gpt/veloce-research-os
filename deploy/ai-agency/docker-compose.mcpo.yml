@@ -48,9 +48,13 @@ services:
       PAPERCLIP_URL: http://paperclip-iraj-paperclip-1:3100
       RESEARCH_REPO_PATH: /workspace/veloce-research-os
       RUFLO_SANDBOX_PATH: /workspace/ruflo-sandbox
+      GRAPHIFY_GRAPH_PATH: /workspace/veloce-research-os/graphify-out/graph.json
+      KNOWLEDGE_MEMORY_DIR: /workspace/veloce-memory
+      KNOWLEDGE_MEMORY_WRITE_ENABLED: "false"
     volumes:
       - /root/veloce-research-os:/workspace/veloce-research-os:ro
       - /opt/veloce-ruflo-sandbox:/workspace/ruflo-sandbox:ro
+      - /root/veloce-memory:/workspace/veloce-memory
     networks:
       - aiagency
     expose:

@@ -8,6 +8,7 @@ __pycache__/
 dist/
 build/
 *.egg-info/
+veloce-graphify-out/
 projects/reliability-policy-matrix/artifacts/raw/*
 projects/reliability-policy-matrix/artifacts/derived/*
 projects/reliability-policy-matrix/artifacts/figures/*

@@ -127,3 +127,56 @@ class Tools:
                 "requested_mode": "execution_packet",
             },
         )
+
+    async def veloce_knowledge_graph_status(self) -> str:
+        """Inspect the Veloce Graphify knowledge graph status."""
+        return self._call("/knowledge_graph_status", {})
+
+    async def veloce_knowledge_graph_query(
+        self,
+        question: str,
+        max_results: int = 8,
+    ) -> str:
+        """
+        Query the Veloce Graphify knowledge graph.
+
+        Args:
+            question: Knowledge graph question about Veloce docs, code, runbooks, or architecture.
+            max_results: Maximum graph nodes/evidence docs to return.
+        """
+        return self._call(
+            "/knowledge_graph_query",
+            {"question": question, "max_results": max_results},
+        )
+
+    async def veloce_knowledge_memory_record(
+        self,
+        source_system: str,
+        event_type: str,
+        summary: str,
+        evidence_refs: list[str] | None = None,
+        tags: list[str] | None = None,
+        dry_run: bool = True,
+    ) -> str:
+        """
+        Create a secret-free memory event packet for Obsidian and Graphify ingestion.
+
+        Args:
+            source_system: System that produced the event, such as openwebui, paperclip, hermes, mcpo, ruflo, github, vps, or obsidian.
+            event_type: Short event class such as tool_call, issue_closeout, graph_update, or demo_proof.
+            summary: Secret-free summary of what happened.
+            evidence_refs: Optional public-safe evidence references.
+            tags: Optional graph tags.
+            dry_run: Keep true unless a mounted knowledge memory write path is configured.
+        """
+        return self._call(
+            "/knowledge_memory_record",
+            {
+                "source_system": source_system,
+                "event_type": event_type,
+                "summary": summary,
+                "evidence_refs": evidence_refs or [],
+                "tags": tags or [],
+                "dry_run": dry_run,
+            },
+        )

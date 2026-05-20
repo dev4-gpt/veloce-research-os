@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+import re
 import socket
 import subprocess
 import sys
@@ -38,6 +39,21 @@ RESEARCH_REPO_PATH = Path(
 )
 RUFLO_SANDBOX_PATH = Path(
     os.environ.get("RUFLO_SANDBOX_PATH", "/workspace/ruflo-sandbox")
+)
+GRAPHIFY_GRAPH_PATH = Path(
+    os.environ.get(
+        "GRAPHIFY_GRAPH_PATH",
+        str(RESEARCH_REPO_PATH / "graphify-out" / "graph.json"),
+    )
+)
+KNOWLEDGE_MEMORY_DIR = Path(
+    os.environ.get("KNOWLEDGE_MEMORY_DIR", "/workspace/veloce-memory")
+)
+KNOWLEDGE_MEMORY_WRITE_ENABLED = (
+    os.environ.get("KNOWLEDGE_MEMORY_WRITE_ENABLED", "false").lower() == "true"
+)
+SECRET_PATTERN = re.compile(
+    r"(?i)(api[_-]?key|token|secret|password|bearer\s+[a-z0-9._~+/=-]{16,}|sk-[a-z0-9]{12,}|nvapi-[a-z0-9_-]{12,})"
 )
 
 
@@ -321,6 +337,102 @@ def _openapi_spec() -> dict[str, Any]:
                     "responses": {
                         "200": {
                             "description": "Hermes agent task result",
+                            "content": {"application/json": {"schema": {"type": "object"}}},
+                        },
+                        "401": {"description": "Unauthorized"},
+                    },
+                }
+            },
+            "/knowledge_graph_status": {
+                "post": {
+                    "operationId": "knowledge_graph_status",
+                    "summary": "Inspect the local Graphify knowledge graph status.",
+                    "security": [{"bearerAuth": []}],
+                    "requestBody": {
+                        "required": False,
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {},
+                                    "additionalProperties": False,
+                                }
+                            }
+                        },
+                    },
+                    "responses": {
+                        "200": {
+                            "description": "Graph status result",
+                            "content": {"application/json": {"schema": {"type": "object"}}},
+                        },
+                        "401": {"description": "Unauthorized"},
+                    },
+                }
+            },
+            "/knowledge_graph_query": {
+                "post": {
+                    "operationId": "knowledge_graph_query",
+                    "summary": "Query the Graphify knowledge graph for repo/docs/runbook context.",
+                    "security": [{"bearerAuth": []}],
+                    "requestBody": {
+                        "required": True,
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "question": {"type": "string"},
+                                        "max_results": {"type": "integer", "default": 8},
+                                    },
+                                    "required": ["question"],
+                                    "additionalProperties": True,
+                                }
+                            }
+                        },
+                    },
+                    "responses": {
+                        "200": {
+                            "description": "Knowledge graph query result",
+                            "content": {"application/json": {"schema": {"type": "object"}}},
+                        },
+                        "401": {"description": "Unauthorized"},
+                    },
+                }
+            },
+            "/knowledge_memory_record": {
+                "post": {
+                    "operationId": "knowledge_memory_record",
+                    "summary": "Create a secret-free memory event packet for Obsidian and Graphify ingestion.",
+                    "security": [{"bearerAuth": []}],
+                    "requestBody": {
+                        "required": True,
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "source_system": {"type": "string"},
+                                        "event_type": {"type": "string"},
+                                        "summary": {"type": "string"},
+                                        "evidence_refs": {
+                                            "type": "array",
+                                            "items": {"type": "string"},
+                                        },
+                                        "tags": {
+                                            "type": "array",
+                                            "items": {"type": "string"},
+                                        },
+                                        "dry_run": {"type": "boolean", "default": True},
+                                    },
+                                    "required": ["source_system", "event_type", "summary"],
+                                    "additionalProperties": True,
+                                }
+                            }
+                        },
+                    },
+                    "responses": {
+                        "200": {
+                            "description": "Knowledge memory record result",
                             "content": {"application/json": {"schema": {"type": "object"}}},
                         },
                         "401": {"description": "Unauthorized"},
@@ -1421,6 +1533,278 @@ def _ruflo_orchestration_dry_run(payload: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _load_graphify_graph() -> tuple[dict[str, Any] | None, str | None]:
+    try:
+        return json.loads(GRAPHIFY_GRAPH_PATH.read_text(encoding="utf-8")), None
+    except Exception as exc:
+        return None, f"{type(exc).__name__}: {exc}"
+
+
+def _graph_node_text(node: dict[str, Any]) -> str:
+    parts = [
+        _as_string(node.get("label")),
+        _as_string(node.get("id")),
+        _as_string(node.get("source_file")),
+        _as_string(node.get("source_location")),
+        _as_string(node.get("file_type")),
+    ]
+    return " ".join(part for part in parts if part)
+
+
+def _graph_terms(question: str) -> list[str]:
+    stop = {
+        "the",
+        "and",
+        "for",
+        "with",
+        "what",
+        "which",
+        "that",
+        "this",
+        "does",
+        "from",
+        "into",
+        "about",
+        "veloce",
+    }
+    terms = re.findall(r"[a-z0-9_.-]+", question.lower())
+    return [term for term in terms if len(term) > 2 and term not in stop]
+
+
+def _knowledge_graph_status() -> dict[str, Any]:
+    trace_id = str(uuid.uuid4())
+    graph, error = _load_graphify_graph()
+    if graph is None:
+        return {
+            "ok": False,
+            "service": "veloce_knowledge_graph_status",
+            "checked_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "trace_id": trace_id,
+            "graph_path": str(GRAPHIFY_GRAPH_PATH),
+            "error": error,
+        }
+
+    nodes = graph.get("nodes", [])
+    links = graph.get("links", [])
+    communities = {
+        node.get("community")
+        for node in nodes
+        if isinstance(node, dict) and node.get("community") is not None
+    }
+    source_files = {
+        node.get("source_file")
+        for node in nodes
+        if isinstance(node, dict) and node.get("source_file")
+    }
+    return {
+        "ok": True,
+        "service": "veloce_knowledge_graph_status",
+        "checked_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "trace_id": trace_id,
+        "graph_path": str(GRAPHIFY_GRAPH_PATH),
+        "graph_present": True,
+        "nodes": len(nodes),
+        "edges": len(links),
+        "communities": len(communities),
+        "source_files": len(source_files),
+        "built_at_commit": graph.get("built_at_commit", ""),
+        "graphify_report": str(GRAPHIFY_GRAPH_PATH.with_name("GRAPH_REPORT.md")),
+        "human_layer": "Obsidian",
+        "machine_layer": "Graphify graph.json",
+    }
+
+
+def _knowledge_graph_query(payload: dict[str, Any]) -> dict[str, Any]:
+    trace_id = str(uuid.uuid4())
+    question = _as_string(payload.get("question"))
+    if not question:
+        return {
+            "ok": False,
+            "service": "veloce_knowledge_graph_query",
+            "trace_id": trace_id,
+            "decision": "invalid_input",
+            "error": "question is required",
+        }
+    graph, error = _load_graphify_graph()
+    if graph is None:
+        return {
+            "ok": False,
+            "service": "veloce_knowledge_graph_query",
+            "trace_id": trace_id,
+            "question": question,
+            "error": error,
+        }
+
+    max_results = int(payload.get("max_results", 8) or 8)
+    max_results = max(1, min(max_results, 20))
+    terms = _graph_terms(question)
+    nodes = [node for node in graph.get("nodes", []) if isinstance(node, dict)]
+    links = [link for link in graph.get("links", []) if isinstance(link, dict)]
+
+    scored: list[tuple[int, dict[str, Any]]] = []
+    for node in nodes:
+        text = _graph_node_text(node).lower()
+        score = sum(3 if term in _as_string(node.get("label")).lower() else 1 for term in terms if term in text)
+        if question.lower() in text:
+            score += 10
+        if score:
+            scored.append((score, node))
+    scored.sort(key=lambda item: (-item[0], _as_string(item[1].get("label"))))
+    matches = [node for _, node in scored[:max_results]]
+    match_ids = {node.get("id") for node in matches}
+    neighbor_edges = [
+        link
+        for link in links
+        if link.get("source") in match_ids or link.get("target") in match_ids
+    ][: max_results * 3]
+    node_by_id = {node.get("id"): node for node in nodes}
+    neighbor_nodes = []
+    seen = set(match_ids)
+    for link in neighbor_edges:
+        for endpoint in (link.get("source"), link.get("target")):
+            if endpoint not in seen and endpoint in node_by_id:
+                seen.add(endpoint)
+                neighbor_nodes.append(node_by_id[endpoint])
+
+    evidence_docs = sorted(
+        {
+            _as_string(node.get("source_file"))
+            for node in matches + neighbor_nodes
+            if _as_string(node.get("source_file")).endswith((".md", ".mdx", ".txt"))
+        }
+    )
+    return {
+        "ok": True,
+        "service": "veloce_knowledge_graph_query",
+        "checked_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "trace_id": trace_id,
+        "question": question,
+        "source": str(GRAPHIFY_GRAPH_PATH),
+        "answer": (
+            f"Found {len(matches)} high-signal graph node(s) and "
+            f"{len(neighbor_edges)} nearby relationship(s) for this question."
+        ),
+        "matches": [
+            {
+                "id": node.get("id"),
+                "label": node.get("label"),
+                "source_file": node.get("source_file"),
+                "source_location": node.get("source_location"),
+                "community": node.get("community"),
+            }
+            for node in matches
+        ],
+        "relationships": [
+            {
+                "source": link.get("source"),
+                "target": link.get("target"),
+                "relation": link.get("relation"),
+                "source_file": link.get("source_file"),
+            }
+            for link in neighbor_edges
+        ],
+        "evidence_docs": evidence_docs[:max_results],
+        "next_action": "Use evidence_docs for human review, or pass matches into Hermes/Ruflo as structured context.",
+    }
+
+
+def _knowledge_memory_record(payload: dict[str, Any]) -> dict[str, Any]:
+    trace_id = str(uuid.uuid4())
+    source_system = _as_string(payload.get("source_system"))
+    event_type = _as_string(payload.get("event_type"))
+    summary = _as_string(payload.get("summary"))
+    evidence_refs = [_as_string(item) for item in payload.get("evidence_refs", []) if _as_string(item)]
+    tags = [_as_string(item) for item in payload.get("tags", []) if _as_string(item)]
+    dry_run = bool(payload.get("dry_run", True))
+    if not source_system or not event_type or not summary:
+        return {
+            "ok": False,
+            "service": "veloce_knowledge_memory_record",
+            "trace_id": trace_id,
+            "decision": "invalid_input",
+            "error": "source_system, event_type, and summary are required",
+        }
+    secret_scan = "\n".join([source_system, event_type, summary, *evidence_refs, *tags])
+    if SECRET_PATTERN.search(secret_scan):
+        return {
+            "ok": False,
+            "service": "veloce_knowledge_memory_record",
+            "trace_id": trace_id,
+            "decision": "blocked_secret_like_content",
+            "error": "memory records must not contain secret-like values",
+            "record_written": False,
+        }
+
+    checked_at = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    record_id = f"km-{checked_at.replace(':', '').replace('-', '')}-{trace_id[:8]}"
+    record = {
+        "id": record_id,
+        "checked_at": checked_at,
+        "source_system": source_system,
+        "event_type": event_type,
+        "summary": summary,
+        "evidence_refs": evidence_refs,
+        "tags": tags,
+        "trace_id": trace_id,
+        "secret_free": True,
+    }
+    markdown = "\n".join(
+        [
+            f"# Knowledge Memory Record {record_id}",
+            "",
+            f"- Time: {checked_at}",
+            f"- Source system: {source_system}",
+            f"- Event type: {event_type}",
+            f"- Trace ID: {trace_id}",
+            f"- Tags: {', '.join(tags) if tags else 'none'}",
+            "",
+            "## Summary",
+            "",
+            summary,
+            "",
+            "## Evidence",
+            "",
+            *(f"- {ref}" for ref in evidence_refs),
+            "",
+            "## Graph Sink",
+            "",
+            "Obsidian human memory -> Graphify graph.json -> OpenWebUI knowledge_graph_query.",
+        ]
+    )
+
+    record_written = False
+    write_error = None
+    if not dry_run and KNOWLEDGE_MEMORY_WRITE_ENABLED:
+        try:
+            day_dir = KNOWLEDGE_MEMORY_DIR / checked_at[:10]
+            day_dir.mkdir(parents=True, exist_ok=True)
+            (day_dir / f"{record_id}.json").write_text(
+                json.dumps(record, indent=2),
+                encoding="utf-8",
+            )
+            (day_dir / f"{record_id}.md").write_text(markdown, encoding="utf-8")
+            with (KNOWLEDGE_MEMORY_DIR / "events.jsonl").open("a", encoding="utf-8") as fh:
+                fh.write(json.dumps(record) + "\n")
+            record_written = True
+        except Exception as exc:
+            write_error = f"{type(exc).__name__}: {exc}"
+
+    return {
+        "ok": write_error is None,
+        "service": "veloce_knowledge_memory_record",
+        "checked_at": checked_at,
+        "trace_id": trace_id,
+        "decision": "memory_record_ready" if write_error is None else "memory_write_failed",
+        "record": record,
+        "record_written": record_written,
+        "dry_run": dry_run,
+        "write_enabled": KNOWLEDGE_MEMORY_WRITE_ENABLED,
+        "write_error": write_error,
+        "obsidian_markdown": markdown,
+        "next_action": "Mirror the markdown into Obsidian and rerun Graphify extraction to make this event graph-queryable.",
+    }
+
+
 class Handler(BaseHTTPRequestHandler):
     server_version = "VeloceMCPOProxy/0.1"
 
@@ -1472,6 +1856,9 @@ class Handler(BaseHTTPRequestHandler):
             "/ruflo_orchestration_dry_run",
             "/hermes_memory_query",
             "/hermes_agent_task",
+            "/knowledge_graph_status",
+            "/knowledge_graph_query",
+            "/knowledge_memory_record",
             "/get_current_time",
             "/convert_time",
         }:
@@ -1534,6 +1921,9 @@ class Handler(BaseHTTPRequestHandler):
             "/ruflo_orchestration_dry_run",
             "/hermes_memory_query",
             "/hermes_agent_task",
+            "/knowledge_graph_status",
+            "/knowledge_graph_query",
+            "/knowledge_memory_record",
         }:
             length = int(self.headers.get("content-length", "0"))
             body = self.rfile.read(length) if length else b"{}"
@@ -1557,7 +1947,16 @@ class Handler(BaseHTTPRequestHandler):
             if self.path == "/hermes_memory_query":
                 self._write_json(200, _hermes_memory_query(payload))
                 return
-            self._write_json(200, _hermes_agent_task(payload))
+            if self.path == "/hermes_agent_task":
+                self._write_json(200, _hermes_agent_task(payload))
+                return
+            if self.path == "/knowledge_graph_status":
+                self._write_json(200, _knowledge_graph_status())
+                return
+            if self.path == "/knowledge_graph_query":
+                self._write_json(200, _knowledge_graph_query(payload))
+                return
+            self._write_json(200, _knowledge_memory_record(payload))
             return
 
         length = int(self.headers.get("content-length", "0"))
