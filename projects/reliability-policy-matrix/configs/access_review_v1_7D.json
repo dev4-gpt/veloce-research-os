@@ -1,0 +1,116 @@
+{
+  "generated_json": "artifacts/derived/security_access_review_v1_7D.json",
+  "generated_markdown": "artifacts/derived/security_access_review_v1_7D.md",
+  "controls": [
+    {
+      "id": "mcpo_bearer_auth",
+      "area": "MCPO",
+      "severity": "critical",
+      "status": "pass",
+      "evidence": "MCPO POST endpoints require Authorization: Bearer $MCPO_API_KEY.",
+      "recommendation": "Rotate MCPO_API_KEY after public demos or suspected exposure."
+    },
+    {
+      "id": "ruflo_runtime_disabled",
+      "area": "Ruflo",
+      "severity": "critical",
+      "status": "pass",
+      "evidence": "ruflo_status reports production_enabled=false and disallowed runtime services.",
+      "recommendation": "Keep daemon, swarm, hooks, memory, autopilot, Claude MCP autostart, and Codex MCP autostart disabled."
+    },
+    {
+      "id": "openwebui_tool_allowlist",
+      "area": "Open WebUI",
+      "severity": "critical",
+      "status": "pass",
+      "evidence": "Current MCPO tools expose explicit time/status/repo/Ruflo status-plan-packet endpoints.",
+      "recommendation": "Do not import arbitrary shell, Docker, filesystem, or GitHub write tools into Open WebUI."
+    },
+    {
+      "id": "paperclip_api_auth_gap",
+      "area": "Paperclip",
+      "severity": "warning",
+      "status": "pass",
+      "evidence": "Paperclip API write attempts returned 401 for agent runs, preventing automated mutation.",
+      "recommendation": "Keep manual disposition flow until run-scoped API auth is intentionally restored and reviewed."
+    },
+    {
+      "id": "backup_restore_verified",
+      "area": "Recovery",
+      "severity": "warning",
+      "status": "pass",
+      "evidence": "V1.7B backup archive and non-destructive restore test completed on VPS.",
+      "recommendation": "Schedule backup cadence and move archives off-host after v1.7D."
+    },
+    {
+      "id": "monitoring_verified",
+      "area": "Monitoring",
+      "severity": "warning",
+      "status": "pass",
+      "evidence": "V1.7C stack-health monitor returned ok=true on VPS.",
+      "recommendation": "Add cron/email or Slack alerting only after webhook secret handling is approved."
+    },
+    {
+      "id": "kimi_webbridge_not_adopted",
+      "area": "Browser Automation",
+      "severity": "warning",
+      "status": "pass",
+      "evidence": "Kimi WebBridge is documented as v1.7E evaluation only.",
+      "recommendation": "Use a separate Chrome profile and low-risk UI-only test before adoption."
+    }
+  ],
+  "safe_openwebui_endpoints": [
+    "/get_current_time",
+    "/convert_time",
+    "/stack_status",
+    "/repo_status",
+    "/ruflo_status",
+    "/ruflo_plan",
+    "/ruflo_execution_packet"
+  ],
+  "forbidden_openwebui_endpoints": [
+    "arbitrary_shell",
+    "docker_control",
+    "filesystem_write",
+    "github_write",
+    "paperclip_mutation",
+    "secret_read",
+    "ruflo_daemon_start",
+    "ruflo_swarm_start",
+    "ruflo_hooks_execution",
+    "ruflo_autopilot",
+    "unrestricted_url_fetch"
+  ],
+  "secret_rotation": [
+    {
+      "secret": "MCPO_API_KEY",
+      "owner": "VPS operator",
+      "when": "after demos, team changes, or suspected exposure"
+    },
+    {
+      "secret": "OPENWEBUI_SECRET_KEY",
+      "owner": "VPS operator",
+      "when": "if Open WebUI auth/session compromise is suspected"
+    },
+    {
+      "secret": "API_SERVER_KEY",
+      "owner": "VPS operator",
+      "when": "if Hermes endpoint key is exposed"
+    },
+    {
+      "secret": "NVIDIA_API_KEY",
+      "owner": "VPS operator",
+      "when": "if provider usage anomalies or exposure occur"
+    },
+    {
+      "secret": "PAPERCLIP_API_KEY",
+      "owner": "Paperclip control-plane owner",
+      "when": "before enabling agent issue mutation"
+    },
+    {
+      "secret": "FUTURE_ALERT_WEBHOOK",
+      "owner": "VPS operator",
+      "when": "before or after incident/team changes"
+    }
+  ]
+}

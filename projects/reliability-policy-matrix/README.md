@@ -75,6 +75,21 @@ The monitor writes:
 artifacts/derived/stack_health_v1_7C.json
 ```
 
+## V1.7D Security Access Review
+
+Run from the repository project directory:
+
+```bash
+make security-access-review
+```
+
+The review writes:
+
+```text
+artifacts/derived/security_access_review_v1_7D.json
+artifacts/derived/security_access_review_v1_7D.md
+```
+
 ## Outputs
 
 Generated outputs are written under:
