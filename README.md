@@ -94,6 +94,7 @@ tools/
 23. For the VEL-142 rollback drill runbook, read `docs/v1.7F-rollback-drill-runbook.md`.
 24. For the unattended autonomous production plan, read `docs/v1.8-unattended-autonomy-plan.md`.
 25. For the production-level autonomy roadmap, read `docs/v1.8-production-level-next-steps.md`.
+26. For the v1.8C-J autonomy control closeout, read `docs/v1.8C-J-autonomy-control-closeout.md`.
 
 ## Flagship Project
 

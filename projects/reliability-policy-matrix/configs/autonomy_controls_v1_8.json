@@ -1,0 +1,62 @@
+{
+  "generated_json": "artifacts/derived/autonomy_controls_v1_8.json",
+  "generated_markdown": "artifacts/derived/autonomy_controls_v1_8.md",
+  "audit_ledger": "artifacts/derived/autonomy_audit_ledger_v1_8.jsonl",
+  "mode": "dry_run",
+  "issue_id": "VEL-v1.8J",
+  "actor": "veloce-autonomy-controller",
+  "capabilities": [
+    {"name": "read_stack_status", "risk": "read_only", "enabled": true, "rollback": "none"},
+    {"name": "read_repo_status", "risk": "read_only", "enabled": true, "rollback": "none"},
+    {"name": "read_ruflo_status", "risk": "read_only", "enabled": true, "rollback": "none"},
+    {"name": "create_execution_packet", "risk": "comment_only", "enabled": true, "rollback": "discard packet"},
+    {"name": "post_paperclip_comment", "risk": "comment_only", "enabled": true, "rollback": "post correction comment"},
+    {"name": "set_paperclip_disposition", "risk": "comment_only", "enabled": true, "rollback": "set disposition back to in_review"},
+    {"name": "open_github_pr", "risk": "low_risk_write", "enabled": true, "rollback": "close PR and delete branch"},
+    {"name": "run_verification_suite", "risk": "read_only", "enabled": true, "rollback": "none"},
+    {"name": "send_alert", "risk": "comment_only", "enabled": true, "rollback": "send correction alert"}
+  ],
+  "forbidden_capabilities": [
+    "arbitrary_shell",
+    "raw_docker_control",
+    "raw_filesystem_write",
+    "raw_github_token_access",
+    "secret_read",
+    "ruflo_runtime_execution",
+    "browser_extension_production_write"
+  ],
+  "policy": {
+    "read_only": "allow",
+    "comment_only": "allow_scoped",
+    "low_risk_write": "pr_or_canary_only",
+    "production_write": "canary_rollback_alert_required",
+    "destructive": "human_approval_required",
+    "secret_bearing": "human_approval_required"
+  },
+  "paperclip_scoped_write_auth": {
+    "status": "pass",
+    "mode": "dry_run_contract",
+    "allowed": ["post_comment", "set_disposition"],
+    "denied": ["read_secret", "mutate_unrelated_project", "delete_issue"],
+    "evidence": "Scoped write contract exists; live token can be swapped in without broad access."
+  },
+  "active_alerting": {
+    "status": "pass",
+    "mode": "dry_run",
+    "destinations": ["operator_console", "future_webhook"],
+    "events": ["stack_health_failed", "rollback_started", "stale_issue", "loop_budget_exceeded", "provider_spend_anomaly"]
+  },
+  "canary_and_rollback": {
+    "status": "pass",
+    "mode": "dry_run",
+    "pre_change_snapshot": "required",
+    "candidate_deploy": "dry_run_render",
+    "post_change_health": "make stack-health",
+    "rollback": "restore previous candidate and rerun stack-health"
+  },
+  "kill_switch": {
+    "status": "pass",
+    "command": "touch /root/ai-agency/AUTONOMY_DISABLED && docker compose -f docker-compose.yml -f docker-compose.status-tool.yml -f docker-compose.mcpo.yml stop autonomy-controller",
+    "verification": "make stack-health still passes for core services"
+  }
+}

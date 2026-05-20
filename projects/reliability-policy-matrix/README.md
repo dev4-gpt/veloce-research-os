@@ -110,6 +110,7 @@ artifacts/derived/rollback_drill_v1_7F.json
 Run before enabling unattended production writes:
 
 ```bash
+make autonomy-controls
 make autonomy-readiness
 ```
 
