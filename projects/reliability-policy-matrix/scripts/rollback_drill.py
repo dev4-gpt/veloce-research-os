@@ -10,6 +10,16 @@ import time
 from typing import Any
 
 
+SECRET_MARKERS = (
+    "KEY",
+    "SECRET",
+    "TOKEN",
+    "PASSWORD",
+    "API",
+    "AUTH",
+)
+
+
 def _load(path: Path) -> dict[str, Any]:
     with path.open("r", encoding="utf-8") as f:
         data = json.load(f)
@@ -26,6 +36,17 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _redact_text(text: str) -> str:
+    redacted_lines = []
+    for line in text.splitlines():
+        upper = line.upper()
+        if any(marker in upper for marker in SECRET_MARKERS):
+            redacted_lines.append("[REDACTED secret-bearing line]")
+        else:
+            redacted_lines.append(line)
+    return "\n".join(redacted_lines)
+
+
 def _latest_dir(root: Path) -> Path | None:
     if not root.exists():
         return None
@@ -33,7 +54,7 @@ def _latest_dir(root: Path) -> Path | None:
     return dirs[-1] if dirs else None
 
 
-def _run(command: list[str], cwd: Path) -> dict[str, Any]:
+def _run(command: list[str], cwd: Path, capture_output: bool = True) -> dict[str, Any]:
     started = time.time()
     if not cwd.exists():
         return {
@@ -52,13 +73,15 @@ def _run(command: list[str], cwd: Path) -> dict[str, Any]:
         stderr=subprocess.PIPE,
         check=False,
     )
+    stdout = proc.stdout[-5000:] if capture_output else "[suppressed]"
+    stderr = proc.stderr[-5000:] if capture_output else "[suppressed]"
     return {
         "command": command,
         "cwd": str(cwd),
         "returncode": proc.returncode,
         "latency_ms": int((time.time() - started) * 1000),
-        "stdout": proc.stdout[-5000:],
-        "stderr": proc.stderr[-5000:],
+        "stdout": _redact_text(stdout),
+        "stderr": _redact_text(stderr),
     }
 
 
@@ -152,9 +175,12 @@ def run(config_path: Path) -> dict[str, Any]:
     for rel_path in config["compose_files"]:
         compose_command.extend(["-f", rel_path])
     compose_command.extend(["config"])
-    compose_result = _run(compose_command, compose_dir)
+    compose_result = _run(compose_command, compose_dir, capture_output=False)
     if compose_result["returncode"] == 0:
-        rendered_compose_path.write_text(compose_result["stdout"], encoding="utf-8")
+        rendered_compose_path.write_text(
+            "# Render succeeded. Output intentionally suppressed because compose config contains secrets.\n",
+            encoding="utf-8",
+        )
     checks.append(
         {
             "name": "compose_config_render",
