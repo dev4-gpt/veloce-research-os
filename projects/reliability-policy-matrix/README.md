@@ -210,6 +210,34 @@ artifacts/derived/long_running_job_memory_v2_0C.md
 artifacts/derived/v2C_jobs/
 ```
 
+## V2.0D Chat-to-Canary Deploy Proof
+
+Run the canary deploy proof in dry-run mode:
+
+```bash
+make canary-deploy-proof
+```
+
+The proof prepares a no-op canary candidate, pre/post health snapshots, a rollback packet, and an alert packet. It remains dry-run by default. Live-ready mode is blocked unless all of these are true:
+
+- `VELOCE_CANARY_DEPLOY_LIVE=1`
+- `live_enabled` is explicitly set to `true` in a local config copy
+- `VELOCE_CANARY_APPROVED` is present
+
+V2.0D does not mutate production, even in live-ready mode.
+
+Outputs:
+
+```text
+artifacts/derived/canary_deploy_v2_0D.json
+artifacts/derived/canary_deploy_v2_0D.md
+artifacts/derived/canary_deploy_audit_v2_0D.jsonl
+artifacts/derived/canary_deploy_memory_v2_0D.md
+artifacts/derived/canary_deploy_packet_v2_0D.json
+artifacts/derived/canary_rollback_packet_v2_0D.json
+artifacts/derived/canary_alert_packet_v2_0D.json
+```
+
 ## Outputs
 
 Generated outputs are written under:

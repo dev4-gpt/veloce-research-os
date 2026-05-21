@@ -1,8 +1,8 @@
 ---
 title: Paperclip Work Ledger
 source_system: paperclip
-generated_at: 2026-05-21T20:23:00Z
-commit: 51536ed
+generated_at: 2026-05-21T20:32:37Z
+commit: 5bdaa41
 tags: [paperclip, issues, tasks, evidence]
 ---
 

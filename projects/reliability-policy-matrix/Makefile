@@ -1,4 +1,4 @@
-.PHONY: matrix-plan run-sample aggregate-sample week1-plan week1-sample week1-full stack-health security-access-review rollback-drill autonomy-controls autonomy-readiness production-execution paperclip-writeback-proof chat-to-pr-proof long-running-job-proof test clean
+.PHONY: matrix-plan run-sample aggregate-sample week1-plan week1-sample week1-full stack-health security-access-review rollback-drill autonomy-controls autonomy-readiness production-execution paperclip-writeback-proof chat-to-pr-proof long-running-job-proof canary-deploy-proof test clean
 
 PYTHON ?= python3
 
@@ -47,6 +47,9 @@ chat-to-pr-proof:
 
 long-running-job-proof:
 	$(PYTHON) scripts/long_running_job_proof.py --config configs/long_running_job_v2_0C.json
+
+canary-deploy-proof:
+	$(PYTHON) scripts/canary_deploy_proof.py --config configs/canary_deploy_v2_0D.json
 
 test:
 	$(PYTHON) -m unittest discover -s tests

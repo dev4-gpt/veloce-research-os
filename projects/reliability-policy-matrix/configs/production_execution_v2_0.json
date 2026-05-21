@@ -113,6 +113,13 @@
       "budget_minutes": 10,
       "max_attempts": 1,
       "heartbeat_seconds": 60
+    },
+    {
+      "id": "v2-chat-to-canary-proof",
+      "capability": "chat_to_canary_deploy",
+      "budget_minutes": 20,
+      "max_attempts": 1,
+      "heartbeat_seconds": 60
     }
   ]
 }

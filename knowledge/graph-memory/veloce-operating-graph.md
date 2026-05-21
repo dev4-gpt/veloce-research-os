@@ -1,8 +1,8 @@
 ---
 title: Veloce Operating Graph
 source_system: veloce
-generated_at: 2026-05-21T20:23:00Z
-commit: 51536ed
+generated_at: 2026-05-21T20:32:37Z
+commit: 5bdaa41
 tags: [veloce, architecture, graph-memory]
 ---
 
@@ -24,6 +24,7 @@ tags: [veloce, architecture, graph-memory]
 - V2.0A Paperclip Scoped Writeback Proof narrows the first live write path to one issue comment and one disposition update with explicit live gates, audit JSONL, rollback notes, and graph-memory markdown.
 - V2.0B Chat-to-PR Proof narrows the first GitHub write path to one generated branch, one docs-only file update, one pull request, audit JSONL, and graph-memory markdown.
 - V2.0C Long-Running Job Heartbeat Proof narrows unattended work to one resumable job packet, one heartbeat record, stale-job detection, audit JSONL, and graph-memory markdown.
+- V2.0D Chat-to-Canary Deploy Proof narrows canary deploy to one no-op candidate, pre/post health snapshots, rollback packet, alert packet, audit JSONL, and graph-memory markdown with no production mutation.
 
 ## Graph Path
 
@@ -40,3 +41,5 @@ V2.0A Paperclip writeback -> scoped issue comment -> scoped disposition update -
 V2.0B chat-to-PR -> generated branch -> docs-only proof file -> pull request -> audit JSONL -> Obsidian/Graphify memory.
 
 V2.0C long-running jobs -> job packet -> heartbeat ledger -> stale-job detector -> audit JSONL -> Obsidian/Graphify memory.
+
+V2.0D chat-to-canary -> no-op candidate -> pre/post health snapshots -> rollback packet -> alert packet -> audit JSONL -> Obsidian/Graphify memory.
