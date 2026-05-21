@@ -1,0 +1,32 @@
+{
+  "generated_json": "artifacts/derived/long_running_job_v2_0C.json",
+  "generated_markdown": "artifacts/derived/long_running_job_v2_0C.md",
+  "audit_ledger": "artifacts/derived/long_running_job_audit_v2_0C.jsonl",
+  "memory_markdown": "artifacts/derived/long_running_job_memory_v2_0C.md",
+  "heartbeat_ledger": "artifacts/derived/long_running_job_heartbeat_v2_0C.jsonl",
+  "job_dir": "artifacts/derived/v2C_jobs",
+  "mode": "dry_run",
+  "issue_id": "VEL-v2.0C-DEMO",
+  "actor": "veloce-long-running-job-controller",
+  "live_enable_env": "VELOCE_LONG_JOB_LIVE",
+  "live_enable_value": "1",
+  "live_enabled": false,
+  "job_id": "v2c-long-running-heartbeat-proof",
+  "capability": "long_running_agent_jobs",
+  "lease_owner": "veloce-production-controller",
+  "budget_minutes": 10,
+  "max_attempts": 1,
+  "heartbeat_seconds": 60,
+  "stale_after_seconds": 180,
+  "loop_budget": {
+    "max_steps": 4,
+    "max_runtime_seconds": 600,
+    "max_cost_usd": 0.25
+  },
+  "stale_probe": {
+    "enabled": true,
+    "job_id": "v2c-stale-job-detection-probe",
+    "last_heartbeat_age_seconds": 240
+  },
+  "secret_free_tags": ["v2.0C", "long-running-job", "heartbeat", "stale-detection"]
+}

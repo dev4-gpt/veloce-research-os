@@ -108,6 +108,7 @@ tools/
 37. For the V2.0 execution layer, read `docs/v2.0-production-execution-control-plane.md`.
 38. For the V2.0A Paperclip scoped writeback proof, read `docs/v2.0A-paperclip-scoped-writeback-proof.md`.
 39. For the V2.0B chat-to-PR proof, read `docs/v2.0B-chat-to-pr-proof.md`.
+40. For the V2.0C long-running job heartbeat proof, read `docs/v2.0C-long-running-job-heartbeat-proof.md`.
 
 ## Flagship Project
 

@@ -186,6 +186,30 @@ artifacts/derived/chat_to_pr_audit_v2_0B.jsonl
 artifacts/derived/chat_to_pr_memory_v2_0B.md
 ```
 
+## V2.0C Long-Running Job Heartbeat Proof
+
+Run the long-running job heartbeat proof in dry-run mode:
+
+```bash
+make long-running-job-proof
+```
+
+The proof prepares one resumable job packet, one heartbeat record, and one stale-job detector pass. It remains dry-run by default. Live-ready mode is blocked unless all of these are true:
+
+- `VELOCE_LONG_JOB_LIVE=1`
+- `live_enabled` is explicitly set to `true` in a local config copy
+
+Outputs:
+
+```text
+artifacts/derived/long_running_job_v2_0C.json
+artifacts/derived/long_running_job_v2_0C.md
+artifacts/derived/long_running_job_audit_v2_0C.jsonl
+artifacts/derived/long_running_job_heartbeat_v2_0C.jsonl
+artifacts/derived/long_running_job_memory_v2_0C.md
+artifacts/derived/v2C_jobs/
+```
+
 ## Outputs
 
 Generated outputs are written under:

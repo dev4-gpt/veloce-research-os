@@ -155,6 +155,7 @@ def export_graph_memory(repo_root: Path, out_dir: Path, paperclip_jsonl: Path | 
 - V2.0 Production Execution Control Plane creates typed capability decisions, job packets, and audit records for Paperclip writeback, chat-to-PR, canary deploy, rollback, alerting, and long-running agent jobs.
 - V2.0A Paperclip Scoped Writeback Proof narrows the first live write path to one issue comment and one disposition update with explicit live gates, audit JSONL, rollback notes, and graph-memory markdown.
 - V2.0B Chat-to-PR Proof narrows the first GitHub write path to one generated branch, one docs-only file update, one pull request, audit JSONL, and graph-memory markdown.
+- V2.0C Long-Running Job Heartbeat Proof narrows unattended work to one resumable job packet, one heartbeat record, stale-job detection, audit JSONL, and graph-memory markdown.
 
 ## Graph Path
 
@@ -169,6 +170,8 @@ V2.0 execution -> capability decision -> job packet -> audit ledger -> verificat
 V2.0A Paperclip writeback -> scoped issue comment -> scoped disposition update -> audit JSONL -> Obsidian/Graphify memory.
 
 V2.0B chat-to-PR -> generated branch -> docs-only proof file -> pull request -> audit JSONL -> Obsidian/Graphify memory.
+
+V2.0C long-running jobs -> job packet -> heartbeat ledger -> stale-job detector -> audit JSONL -> Obsidian/Graphify memory.
 """
     path = out_dir / "veloce-operating-graph.md"
     _write_markdown(path, "Veloce Operating Graph", ["veloce", "architecture", "graph-memory"], "veloce", operating_body, commit)
@@ -183,7 +186,7 @@ V2.0B chat-to-PR -> generated branch -> docs-only proof file -> pull request -> 
             "",
             "## Product Meaning",
             "",
-            "OpenWebUI users analyze Veloce through this typed tool surface. The graph memory endpoints are the bridge from chat to Obsidian and Graphify. V2.0B extends the approved-chat path toward docs-only GitHub pull requests.",
+            "OpenWebUI users analyze Veloce through this typed tool surface. The graph memory endpoints are the bridge from chat to Obsidian and Graphify. V2.0B extends the approved-chat path toward docs-only GitHub pull requests; V2.0C adds the heartbeat and stale-job controls needed before canary execution.",
         ]
     )
     path = out_dir / "openwebui-mcpo-tool-surface.md"
