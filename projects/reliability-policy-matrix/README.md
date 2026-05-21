@@ -138,6 +138,30 @@ artifacts/derived/production_execution_audit_v2_0.jsonl
 artifacts/derived/v2_jobs/
 ```
 
+## V2.0A Paperclip Scoped Writeback Proof
+
+Run the scoped Paperclip writeback proof in dry-run mode:
+
+```bash
+make paperclip-writeback-proof
+```
+
+The proof prepares exactly one Paperclip issue comment and one disposition update. It remains dry-run by default. A live write is blocked unless all of these are true:
+
+- `VELOCE_PAPERCLIP_WRITEBACK_LIVE=1`
+- `live_enabled` is explicitly set to `true` in a local config copy
+- `PAPERCLIP_BASE_URL` and `PAPERCLIP_AUTOMATION_TOKEN` are present
+- the configured endpoint templates match the deployed Paperclip API
+
+Outputs:
+
+```text
+artifacts/derived/paperclip_writeback_v2_0A.json
+artifacts/derived/paperclip_writeback_v2_0A.md
+artifacts/derived/paperclip_writeback_audit_v2_0A.jsonl
+artifacts/derived/paperclip_writeback_memory_v2_0A.md
+```
+
 ## Outputs
 
 Generated outputs are written under:

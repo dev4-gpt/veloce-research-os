@@ -1,5 +1,5 @@
 {
-  "commit": "c038eb7",
+  "commit": "45d2829",
   "files": [
     "knowledge/graph-memory/veloce-operating-graph.md",
     "knowledge/graph-memory/openwebui-mcpo-tool-surface.md",
@@ -7,7 +7,7 @@
     "knowledge/graph-memory/hermes-ruflo-skills.md",
     "knowledge/graph-memory/obsidian-graphify-memory-loop.md"
   ],
-  "generated_at": "2026-05-21T18:41:53Z",
+  "generated_at": "2026-05-21T19:45:09Z",
   "mcpo_paths": 13,
   "ok": true,
   "openwebui_tools": 10,

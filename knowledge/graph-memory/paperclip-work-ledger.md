@@ -1,8 +1,8 @@
 ---
 title: Paperclip Work Ledger
 source_system: paperclip
-generated_at: 2026-05-21T18:41:53Z
-commit: c038eb7
+generated_at: 2026-05-21T19:45:09Z
+commit: 45d2829
 tags: [paperclip, issues, tasks, evidence]
 ---
 
@@ -11,6 +11,10 @@ tags: [paperclip, issues, tasks, evidence]
 ## Role
 
 Paperclip is the issue, task, disposition, comment, and evidence ledger for Veloce.
+
+## V2.0A Scoped Writeback
+
+The V2.0A proof records one scoped issue comment and one scoped disposition update. Live writes stay blocked until `VELOCE_PAPERCLIP_WRITEBACK_LIVE=1`, `live_enabled=true`, Paperclip scoped env vars, and correct API endpoint templates are present.
 
 ## Evidence Documents
 
@@ -50,6 +54,7 @@ Paperclip is the issue, task, disposition, comment, and evidence ledger for Velo
 - `docs/v1.9M-operating-graph-ranking-boost.md`
 - `docs/v1.9N-manifest-penalty-markdown-priority.md`
 - `docs/v2.0-production-execution-control-plane.md`
+- `docs/v2.0A-paperclip-scoped-writeback-proof.md`
 
 ## Exported Issue And Task Metadata
 

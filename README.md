@@ -106,6 +106,7 @@ tools/
 35. For operating-memory ranking in graph queries, read `docs/v1.9M-operating-graph-ranking-boost.md`.
 36. For markdown-first operating-memory ranking, read `docs/v1.9N-manifest-penalty-markdown-priority.md`.
 37. For the V2.0 execution layer, read `docs/v2.0-production-execution-control-plane.md`.
+38. For the V2.0A Paperclip scoped writeback proof, read `docs/v2.0A-paperclip-scoped-writeback-proof.md`.
 
 ## Flagship Project
 

@@ -153,6 +153,7 @@ def export_graph_memory(repo_root: Path, out_dir: Path, paperclip_jsonl: Path | 
 - GitHub is the source of truth for code, docs, deploy manifests, and reproducible runbooks.
 - VPS runtime proves the deployed stack with health checks, rollback drills, and live tool responses.
 - V2.0 Production Execution Control Plane creates typed capability decisions, job packets, and audit records for Paperclip writeback, chat-to-PR, canary deploy, rollback, alerting, and long-running agent jobs.
+- V2.0A Paperclip Scoped Writeback Proof narrows the first live write path to one issue comment and one disposition update with explicit live gates, audit JSONL, rollback notes, and graph-memory markdown.
 
 ## Graph Path
 
@@ -163,6 +164,8 @@ Obsidian -> markdown memory -> Graphify extraction -> OpenWebUI knowledge_graph_
 Hermes/Ruflo -> consume returned graph context for reasoning, planning, and worker packets.
 
 V2.0 execution -> capability decision -> job packet -> audit ledger -> verification -> rollback/alert/disposition -> graph memory.
+
+V2.0A Paperclip writeback -> scoped issue comment -> scoped disposition update -> audit JSONL -> Obsidian/Graphify memory.
 """
     path = out_dir / "veloce-operating-graph.md"
     _write_markdown(path, "Veloce Operating Graph", ["veloce", "architecture", "graph-memory"], "veloce", operating_body, commit)
@@ -186,7 +189,20 @@ V2.0 execution -> capability decision -> job packet -> audit ledger -> verificat
 
     paperclip_docs = _docs_matching(repo_root, "paperclip")
     paperclip_items = _paperclip_records(paperclip_jsonl)
-    ledger_body = ["# Paperclip Work Ledger", "", "## Role", "", "Paperclip is the issue, task, disposition, comment, and evidence ledger for Veloce.", "", "## Evidence Documents", ""]
+    ledger_body = [
+        "# Paperclip Work Ledger",
+        "",
+        "## Role",
+        "",
+        "Paperclip is the issue, task, disposition, comment, and evidence ledger for Veloce.",
+        "",
+        "## V2.0A Scoped Writeback",
+        "",
+        "The V2.0A proof records one scoped issue comment and one scoped disposition update. Live writes stay blocked until `VELOCE_PAPERCLIP_WRITEBACK_LIVE=1`, `live_enabled=true`, Paperclip scoped env vars, and correct API endpoint templates are present.",
+        "",
+        "## Evidence Documents",
+        "",
+    ]
     ledger_body.extend(f"- `{doc}`" for doc in paperclip_docs)
     ledger_body.extend(["", "## Exported Issue And Task Metadata", ""])
     if paperclip_items:
