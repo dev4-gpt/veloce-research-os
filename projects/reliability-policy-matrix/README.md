@@ -121,6 +121,23 @@ artifacts/derived/autonomy_readiness_v1_8.json
 artifacts/derived/autonomy_readiness_v1_8.md
 ```
 
+## V2.0 Production Execution Control Plane
+
+Run before enabling live Paperclip writeback, chat-to-PR, canary deploy, rollback, or long-running jobs:
+
+```bash
+make production-execution
+```
+
+The control plane writes dry-run job packets and an audit ledger, then blocks live execution unless `VELOCE_V2_LIVE=1`, the capability is explicitly `live_enabled`, scoped env vars are present, and the kill switch is absent.
+
+```text
+artifacts/derived/production_execution_v2_0.json
+artifacts/derived/production_execution_v2_0.md
+artifacts/derived/production_execution_audit_v2_0.jsonl
+artifacts/derived/v2_jobs/
+```
+
 ## Outputs
 
 Generated outputs are written under:

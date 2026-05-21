@@ -1,4 +1,4 @@
-.PHONY: matrix-plan run-sample aggregate-sample week1-plan week1-sample week1-full stack-health security-access-review rollback-drill autonomy-controls autonomy-readiness test clean
+.PHONY: matrix-plan run-sample aggregate-sample week1-plan week1-sample week1-full stack-health security-access-review rollback-drill autonomy-controls autonomy-readiness production-execution test clean
 
 PYTHON ?= python3
 
@@ -35,6 +35,9 @@ autonomy-controls:
 
 autonomy-readiness:
 	$(PYTHON) scripts/autonomy_readiness_gate.py --config configs/autonomy_readiness_v1_8.json
+
+production-execution:
+	$(PYTHON) scripts/production_execution_control_plane.py --config configs/production_execution_v2_0.json
 
 test:
 	$(PYTHON) -m unittest discover -s tests

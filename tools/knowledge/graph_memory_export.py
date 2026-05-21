@@ -152,6 +152,7 @@ def export_graph_memory(repo_root: Path, out_dir: Path, paperclip_jsonl: Path | 
 - Paperclip is the work ledger for issues, tasks, dispositions, comments, and closeout evidence.
 - GitHub is the source of truth for code, docs, deploy manifests, and reproducible runbooks.
 - VPS runtime proves the deployed stack with health checks, rollback drills, and live tool responses.
+- V2.0 Production Execution Control Plane creates typed capability decisions, job packets, and audit records for Paperclip writeback, chat-to-PR, canary deploy, rollback, alerting, and long-running agent jobs.
 
 ## Graph Path
 
@@ -160,6 +161,8 @@ OpenWebUI -> Veloce Agentic Control -> MCPO -> Graphify graph.json -> evidence d
 Obsidian -> markdown memory -> Graphify extraction -> OpenWebUI knowledge_graph_query.
 
 Hermes/Ruflo -> consume returned graph context for reasoning, planning, and worker packets.
+
+V2.0 execution -> capability decision -> job packet -> audit ledger -> verification -> rollback/alert/disposition -> graph memory.
 """
     path = out_dir / "veloce-operating-graph.md"
     _write_markdown(path, "Veloce Operating Graph", ["veloce", "architecture", "graph-memory"], "veloce", operating_body, commit)

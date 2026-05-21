@@ -1,8 +1,8 @@
 ---
 title: OpenWebUI MCPO Tool Surface
 source_system: openwebui
-generated_at: 2026-05-20T21:42:16Z
-commit: 32390c8
+generated_at: 2026-05-21T18:41:53Z
+commit: c038eb7
 tags: [openwebui, mcpo, tools]
 ---
 

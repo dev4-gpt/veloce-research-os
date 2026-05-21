@@ -1,8 +1,8 @@
 ---
 title: Obsidian And Graphify Memory Loop
 source_system: obsidian-graphify
-generated_at: 2026-05-20T21:42:17Z
-commit: 32390c8
+generated_at: 2026-05-21T18:41:53Z
+commit: c038eb7
 tags: [obsidian, graphify, memory]
 ---
 

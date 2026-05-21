@@ -1,0 +1,111 @@
+{
+  "generated_json": "artifacts/derived/production_execution_v2_0.json",
+  "generated_markdown": "artifacts/derived/production_execution_v2_0.md",
+  "audit_ledger": "artifacts/derived/production_execution_audit_v2_0.jsonl",
+  "job_dir": "artifacts/derived/v2_jobs",
+  "mode": "dry_run",
+  "issue_id": "VEL-v2.0",
+  "actor": "veloce-production-controller",
+  "target_state": "operator_supervised_unattended_production",
+  "kill_switch_path": "/root/ai-agency/AUTONOMY_DISABLED",
+  "live_enable_env": "VELOCE_V2_LIVE",
+  "live_enable_value": "1",
+  "required_live_env": {
+    "paperclip_writeback": ["PAPERCLIP_BASE_URL", "PAPERCLIP_AUTOMATION_TOKEN"],
+    "chat_to_pr": ["GITHUB_TOKEN", "GITHUB_REPOSITORY"],
+    "chat_to_canary_deploy": ["VELOCE_CANARY_APPROVED"],
+    "autonomous_rollback": ["VELOCE_ROLLBACK_APPROVED"],
+    "active_alerting": ["VELOCE_ALERT_WEBHOOK"],
+    "long_running_agent_jobs": []
+  },
+  "policy": {
+    "read_only": "allow",
+    "comment_only": "allow_scoped",
+    "low_risk_write": "pr_or_canary_only",
+    "production_write": "canary_rollback_alert_required",
+    "destructive": "human_approval_required",
+    "secret_bearing": "human_approval_required"
+  },
+  "forbidden_capabilities": [
+    "arbitrary_shell",
+    "raw_docker_control",
+    "raw_filesystem_write",
+    "raw_github_token_access",
+    "secret_read",
+    "ruflo_runtime_execution",
+    "browser_extension_production_write"
+  ],
+  "capabilities": [
+    {
+      "name": "paperclip_writeback",
+      "risk": "comment_only",
+      "enabled": true,
+      "live_enabled": false,
+      "rollback": "post correction comment and restore prior disposition",
+      "description": "Post scoped issue comments and update dispositions without broad admin access."
+    },
+    {
+      "name": "chat_to_pr",
+      "risk": "low_risk_write",
+      "enabled": true,
+      "live_enabled": false,
+      "rollback": "close PR and delete generated branch",
+      "description": "Turn an approved chat plan into a GitHub pull request."
+    },
+    {
+      "name": "chat_to_canary_deploy",
+      "risk": "production_write",
+      "enabled": true,
+      "live_enabled": false,
+      "rollback": "run autonomous_rollback and verify stack-health",
+      "description": "Promote an approved PR/candidate to canary with pre/post health snapshots."
+    },
+    {
+      "name": "autonomous_rollback",
+      "risk": "destructive",
+      "enabled": true,
+      "live_enabled": false,
+      "rollback": "operator escalation if rollback verification fails",
+      "description": "Restore last-known-good deployment and verify recovery."
+    },
+    {
+      "name": "long_running_agent_jobs",
+      "risk": "low_risk_write",
+      "enabled": true,
+      "live_enabled": false,
+      "rollback": "cancel queued job and mark audit disposition blocked",
+      "description": "Create resumable jobs with budget, heartbeat, lease, and audit records."
+    },
+    {
+      "name": "active_alerting",
+      "risk": "comment_only",
+      "enabled": true,
+      "live_enabled": false,
+      "rollback": "send correction alert",
+      "description": "Send alerts for failed health, rollback, stale jobs, loop budget, and spend anomalies."
+    }
+  ],
+  "job_templates": [
+    {
+      "id": "v2-paperclip-writeback-proof",
+      "capability": "paperclip_writeback",
+      "budget_minutes": 5,
+      "max_attempts": 1,
+      "heartbeat_seconds": 60
+    },
+    {
+      "id": "v2-chat-to-pr-proof",
+      "capability": "chat_to_pr",
+      "budget_minutes": 15,
+      "max_attempts": 1,
+      "heartbeat_seconds": 60
+    },
+    {
+      "id": "v2-canary-rollback-proof",
+      "capability": "chat_to_canary_deploy",
+      "budget_minutes": 20,
+      "max_attempts": 1,
+      "heartbeat_seconds": 60
+    }
+  ]
+}

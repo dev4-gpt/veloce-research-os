@@ -1,8 +1,8 @@
 ---
 title: Hermes And Ruflo Skills
 source_system: hermes-ruflo
-generated_at: 2026-05-20T21:42:17Z
-commit: 32390c8
+generated_at: 2026-05-21T18:41:53Z
+commit: c038eb7
 tags: [hermes, ruflo, skills, orchestration]
 ---
 
@@ -35,6 +35,7 @@ tags: [hermes, ruflo, skills, orchestration]
 - `docs/v1.9L-operating-graph-ingestion.md`
 - `docs/v1.9M-operating-graph-ranking-boost.md`
 - `docs/v1.9N-manifest-penalty-markdown-priority.md`
+- `docs/v2.0-production-execution-control-plane.md`
 
 ## Ruflo Planning And Orchestration Layer
 
@@ -71,6 +72,7 @@ tags: [hermes, ruflo, skills, orchestration]
 - `docs/v1.9L-operating-graph-ingestion.md`
 - `docs/v1.9M-operating-graph-ranking-boost.md`
 - `docs/v1.9N-manifest-penalty-markdown-priority.md`
+- `docs/v2.0-production-execution-control-plane.md`
 
 ## Runtime Boundary
 
