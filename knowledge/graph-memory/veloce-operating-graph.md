@@ -1,8 +1,8 @@
 ---
 title: Veloce Operating Graph
 source_system: veloce
-generated_at: 2026-05-21T19:45:09Z
-commit: 45d2829
+generated_at: 2026-05-21T20:13:53Z
+commit: b23783a
 tags: [veloce, architecture, graph-memory]
 ---
 
@@ -22,6 +22,7 @@ tags: [veloce, architecture, graph-memory]
 - VPS runtime proves the deployed stack with health checks, rollback drills, and live tool responses.
 - V2.0 Production Execution Control Plane creates typed capability decisions, job packets, and audit records for Paperclip writeback, chat-to-PR, canary deploy, rollback, alerting, and long-running agent jobs.
 - V2.0A Paperclip Scoped Writeback Proof narrows the first live write path to one issue comment and one disposition update with explicit live gates, audit JSONL, rollback notes, and graph-memory markdown.
+- V2.0B Chat-to-PR Proof narrows the first GitHub write path to one generated branch, one docs-only file update, one pull request, audit JSONL, and graph-memory markdown.
 
 ## Graph Path
 
@@ -34,3 +35,5 @@ Hermes/Ruflo -> consume returned graph context for reasoning, planning, and work
 V2.0 execution -> capability decision -> job packet -> audit ledger -> verification -> rollback/alert/disposition -> graph memory.
 
 V2.0A Paperclip writeback -> scoped issue comment -> scoped disposition update -> audit JSONL -> Obsidian/Graphify memory.
+
+V2.0B chat-to-PR -> generated branch -> docs-only proof file -> pull request -> audit JSONL -> Obsidian/Graphify memory.

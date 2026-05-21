@@ -1,8 +1,8 @@
 ---
 title: OpenWebUI MCPO Tool Surface
 source_system: openwebui
-generated_at: 2026-05-21T19:45:09Z
-commit: 45d2829
+generated_at: 2026-05-21T20:13:53Z
+commit: b23783a
 tags: [openwebui, mcpo, tools]
 ---
 
@@ -39,4 +39,4 @@ tags: [openwebui, mcpo, tools]
 
 ## Product Meaning
 
-OpenWebUI users analyze Veloce through this typed tool surface. The graph memory endpoints are the bridge from chat to Obsidian and Graphify.
+OpenWebUI users analyze Veloce through this typed tool surface. The graph memory endpoints are the bridge from chat to Obsidian and Graphify. V2.0B extends the approved-chat path toward docs-only GitHub pull requests.

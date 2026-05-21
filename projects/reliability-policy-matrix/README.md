@@ -162,6 +162,30 @@ artifacts/derived/paperclip_writeback_audit_v2_0A.jsonl
 artifacts/derived/paperclip_writeback_memory_v2_0A.md
 ```
 
+## V2.0B Chat-to-PR Proof
+
+Run the chat-to-PR proof in dry-run mode:
+
+```bash
+make chat-to-pr-proof
+```
+
+The proof prepares a generated GitHub branch, one docs-only proof file, and one pull request. It remains dry-run by default. A live PR is blocked unless all of these are true:
+
+- `VELOCE_CHAT_TO_PR_LIVE=1`
+- `live_enabled` is explicitly set to `true` in a local config copy
+- `GITHUB_TOKEN` and `GITHUB_REPOSITORY` are present
+- the proof file path starts with an allowed prefix such as `docs/`
+
+Outputs:
+
+```text
+artifacts/derived/chat_to_pr_v2_0B.json
+artifacts/derived/chat_to_pr_v2_0B.md
+artifacts/derived/chat_to_pr_audit_v2_0B.jsonl
+artifacts/derived/chat_to_pr_memory_v2_0B.md
+```
+
 ## Outputs
 
 Generated outputs are written under:

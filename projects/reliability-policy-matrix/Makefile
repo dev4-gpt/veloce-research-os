@@ -1,4 +1,4 @@
-.PHONY: matrix-plan run-sample aggregate-sample week1-plan week1-sample week1-full stack-health security-access-review rollback-drill autonomy-controls autonomy-readiness production-execution paperclip-writeback-proof test clean
+.PHONY: matrix-plan run-sample aggregate-sample week1-plan week1-sample week1-full stack-health security-access-review rollback-drill autonomy-controls autonomy-readiness production-execution paperclip-writeback-proof chat-to-pr-proof test clean
 
 PYTHON ?= python3
 
@@ -41,6 +41,9 @@ production-execution:
 
 paperclip-writeback-proof:
 	$(PYTHON) scripts/paperclip_writeback_proof.py --config configs/paperclip_writeback_v2_0A.json
+
+chat-to-pr-proof:
+	$(PYTHON) scripts/chat_to_pr_proof.py --config configs/chat_to_pr_v2_0B.json
 
 test:
 	$(PYTHON) -m unittest discover -s tests
