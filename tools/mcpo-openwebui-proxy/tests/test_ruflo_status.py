@@ -100,6 +100,33 @@ class RufloStatusTests(unittest.TestCase):
         app.RESEARCH_REPO_PATH = original_repo
         temp.cleanup()
 
+    def _with_production_paths(self):
+        temp = tempfile.TemporaryDirectory()
+        root = Path(temp.name)
+        originals = (
+            app.PRODUCTION_JOB_DIR,
+            app.PRODUCTION_RUNNER_STATE_DIR,
+            app.PRODUCTION_AUDIT_LEDGER,
+            app.PRODUCTION_RUNNER_LEDGER,
+            app.PRODUCTION_MEMORY_EVENT_DIR,
+        )
+        app.PRODUCTION_JOB_DIR = root / "jobs"
+        app.PRODUCTION_RUNNER_STATE_DIR = root / "states"
+        app.PRODUCTION_AUDIT_LEDGER = root / "audit.jsonl"
+        app.PRODUCTION_RUNNER_LEDGER = root / "runner.jsonl"
+        app.PRODUCTION_MEMORY_EVENT_DIR = root / "memory"
+        return temp, originals
+
+    def _restore_production_paths(self, temp, originals) -> None:
+        (
+            app.PRODUCTION_JOB_DIR,
+            app.PRODUCTION_RUNNER_STATE_DIR,
+            app.PRODUCTION_AUDIT_LEDGER,
+            app.PRODUCTION_RUNNER_LEDGER,
+            app.PRODUCTION_MEMORY_EVENT_DIR,
+        ) = originals
+        temp.cleanup()
+
     def test_ruflo_status_reports_hardened_sandbox(self) -> None:
         paths = self._with_hardened_paths()
         try:
@@ -239,6 +266,81 @@ class RufloStatusTests(unittest.TestCase):
         self.assertIn("/knowledge_graph_status", paths)
         self.assertIn("/knowledge_graph_query", paths)
         self.assertIn("/knowledge_memory_record", paths)
+        self.assertIn("/production_execution_status", paths)
+        self.assertIn("/production_job_enqueue", paths)
+        self.assertIn("/production_job_status", paths)
+        self.assertIn("/production_job_cancel", paths)
+        self.assertIn("/production_job_approve", paths)
+        self.assertIn("/production_audit_tail", paths)
+
+    def test_production_job_endpoints_enqueue_approve_cancel_and_tail(self) -> None:
+        paths = self._with_production_paths()
+        try:
+            enqueue = app._production_job_enqueue(
+                {
+                    "job_id": "job-1",
+                    "capability": "paperclip_writeback",
+                    "issue_id": "VEL-test",
+                    "budget_minutes": 5,
+                    "max_attempts": 1,
+                    "heartbeat_seconds": 60,
+                }
+            )
+            self.assertTrue(enqueue["ok"])
+            self.assertEqual(enqueue["decision"], "queued_dry_run")
+            self.assertEqual(enqueue["service"], "production_job_enqueue")
+            self.assertTrue((app.PRODUCTION_JOB_DIR / "job-1.json").exists())
+
+            status = app._production_job_status({"job_id": "job-1"})
+            self.assertTrue(status["ok"])
+            self.assertEqual(status["state"]["state"], "queued_dry_run")
+
+            approve = app._production_job_approve(
+                {"job_id": "job-1", "approved_by": "Aryaman", "approval": "human_approved"}
+            )
+            self.assertTrue(approve["ok"])
+            self.assertEqual(approve["decision"], "approved_for_live_candidate")
+
+            cancel = app._production_job_cancel({"job_id": "job-1", "reason": "operator pause"})
+            self.assertTrue(cancel["ok"])
+            self.assertEqual(cancel["decision"], "cancelled")
+
+            execution = app._production_execution_status()
+            self.assertTrue(execution["ok"])
+            self.assertEqual(execution["job_count"], 1)
+
+            tail = app._production_audit_tail({"limit": 10})
+            self.assertTrue(tail["ok"])
+            transitions = {item["transition"] for item in tail["records"]}
+            self.assertIn("enqueue", transitions)
+            self.assertIn("cancel", transitions)
+        finally:
+            self._restore_production_paths(*paths)
+
+    def test_production_job_enqueue_rejects_raw_command_and_secret(self) -> None:
+        paths = self._with_production_paths()
+        try:
+            command_result = app._production_job_enqueue(
+                {
+                    "job_id": "bad",
+                    "capability": "chat_to_pr",
+                    "command": "docker restart prod",
+                }
+            )
+            self.assertFalse(command_result["ok"])
+            self.assertEqual(command_result["decision"], "blocked_unsafe_payload")
+
+            secret_result = app._production_job_enqueue(
+                {
+                    "job_id": "bad-secret",
+                    "capability": "chat_to_pr",
+                    "issue_id": "Bearer abcdefghijklmnopqrstuvwxyz",
+                }
+            )
+            self.assertFalse(secret_result["ok"])
+            self.assertEqual(secret_result["decision"], "blocked_unsafe_payload")
+        finally:
+            self._restore_production_paths(*paths)
 
     def test_knowledge_graph_query_prefers_docs_by_default(self) -> None:
         temp = tempfile.TemporaryDirectory()

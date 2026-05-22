@@ -1,0 +1,14 @@
+{
+  "generated_json": "artifacts/derived/production_job_runner_v2_1.json",
+  "audit_ledger": "artifacts/derived/production_execution_audit_v2_0.jsonl",
+  "runner_ledger": "artifacts/derived/production_job_runner_events_v2_1.jsonl",
+  "job_dir": "artifacts/derived/v2_jobs",
+  "state_dir": "artifacts/derived/v2_runner_state",
+  "memory_dir": "artifacts/derived/graph-memory-events",
+  "mode": "dry_run",
+  "issue_id": "VEL-v2.1",
+  "lease_owner": "veloce-production-runner",
+  "lease_seconds": 120,
+  "stale_after_seconds": 300,
+  "simulate_canary_failure": false
+}

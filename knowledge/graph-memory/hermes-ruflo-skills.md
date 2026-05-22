@@ -1,8 +1,8 @@
 ---
 title: Hermes And Ruflo Skills
 source_system: hermes-ruflo
-generated_at: 2026-05-22T18:28:59Z
-commit: bd54544
+generated_at: 2026-05-22T19:00:40Z
+commit: 6560e6b
 tags: [hermes, ruflo, skills, orchestration]
 ---
 
@@ -73,6 +73,7 @@ tags: [hermes, ruflo, skills, orchestration]
 - `docs/v1.9M-operating-graph-ranking-boost.md`
 - `docs/v1.9N-manifest-penalty-markdown-priority.md`
 - `docs/v2.0-production-execution-control-plane.md`
+- `docs/v2.1-v2.5-production-ai-os-completion.md`
 
 ## Runtime Boundary
 

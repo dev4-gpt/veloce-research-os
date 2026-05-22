@@ -192,3 +192,90 @@ class Tools:
                 "dry_run": dry_run,
             },
         )
+
+    async def veloce_production_execution_status(self) -> str:
+        """Inspect V2 production execution jobs, runner state, and audit ledgers."""
+        return self._call("/production_execution_status", {})
+
+    async def veloce_production_job_enqueue(
+        self,
+        job_id: str,
+        capability: str,
+        issue_id: str = "",
+        budget_minutes: int = 5,
+        max_attempts: int = 1,
+        heartbeat_seconds: int = 60,
+    ) -> str:
+        """
+        Queue a typed dry-run production job packet.
+
+        Args:
+            job_id: Stable job id using letters, numbers, dots, dashes, or underscores.
+            capability: Allowlisted capability such as paperclip_writeback, chat_to_pr, chat_to_canary_deploy, autonomous_rollback, long_running_agent_jobs, active_alerting, or graph_memory_ingestion.
+            issue_id: Optional Paperclip/Veloce issue id.
+            budget_minutes: Maximum job budget in minutes.
+            max_attempts: Maximum runner attempts.
+            heartbeat_seconds: Heartbeat interval for long-running work.
+        """
+        return self._call(
+            "/production_job_enqueue",
+            {
+                "job_id": job_id,
+                "capability": capability,
+                "issue_id": issue_id,
+                "budget_minutes": budget_minutes,
+                "max_attempts": max_attempts,
+                "heartbeat_seconds": heartbeat_seconds,
+            },
+        )
+
+    async def veloce_production_job_status(self, job_id: str) -> str:
+        """
+        Inspect one typed production job packet and runner state.
+
+        Args:
+            job_id: Job id returned by veloce_production_job_enqueue or the V2 control plane.
+        """
+        return self._call("/production_job_status", {"job_id": job_id})
+
+    async def veloce_production_job_cancel(
+        self,
+        job_id: str,
+        reason: str = "operator_cancelled",
+    ) -> str:
+        """
+        Cancel a queued or running typed production job.
+
+        Args:
+            job_id: Job id to cancel.
+            reason: Secret-free cancellation reason.
+        """
+        return self._call("/production_job_cancel", {"job_id": job_id, "reason": reason})
+
+    async def veloce_production_job_approve(
+        self,
+        job_id: str,
+        approved_by: str,
+        approval: str = "human_approved",
+    ) -> str:
+        """
+        Mark a queued dry-run packet as approved_for_live_candidate without executing it.
+
+        Args:
+            job_id: Job id to approve.
+            approved_by: Human approver name.
+            approval: Must be human_approved.
+        """
+        return self._call(
+            "/production_job_approve",
+            {"job_id": job_id, "approved_by": approved_by, "approval": approval},
+        )
+
+    async def veloce_production_audit_tail(self, limit: int = 20) -> str:
+        """
+        Return a redacted tail of production execution audit events.
+
+        Args:
+            limit: Maximum audit records to return, clamped by the server.
+        """
+        return self._call("/production_audit_tail", {"limit": limit})

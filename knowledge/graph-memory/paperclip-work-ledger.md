@@ -1,8 +1,8 @@
 ---
 title: Paperclip Work Ledger
 source_system: paperclip
-generated_at: 2026-05-22T18:28:59Z
-commit: bd54544
+generated_at: 2026-05-22T19:00:40Z
+commit: 6560e6b
 tags: [paperclip, issues, tasks, evidence]
 ---
 
@@ -56,6 +56,7 @@ The V2.0A proof records one scoped issue comment and one scoped disposition upda
 - `docs/v2.0-production-execution-control-plane.md`
 - `docs/v2.0A-paperclip-scoped-writeback-proof.md`
 - `docs/v2.0E-I-production-pilot-pack.md`
+- `docs/v2.1-v2.5-production-ai-os-completion.md`
 
 ## Exported Issue And Task Metadata
 

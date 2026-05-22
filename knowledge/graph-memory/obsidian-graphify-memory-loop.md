@@ -1,8 +1,8 @@
 ---
 title: Obsidian And Graphify Memory Loop
 source_system: obsidian-graphify
-generated_at: 2026-05-22T18:28:59Z
-commit: bd54544
+generated_at: 2026-05-22T19:00:40Z
+commit: 6560e6b
 tags: [obsidian, graphify, memory]
 ---
 
@@ -17,6 +17,8 @@ Obsidian stores readable markdown notes, issue evidence, runbooks, generated mem
 Graphify extracts a graph from code, docs, runbooks, and graph-memory markdown into `graphify-out/graph.json`.
 
 Graph-memory markdown files are the preferred human-facing evidence nodes. `manifest.json` exists for automation bookkeeping and should not outrank markdown notes in normal product queries.
+
+V2.1-V2.5 production job events are emitted as secret-free markdown under the derived graph-memory event directory, then can be mirrored into Obsidian and re-extracted by Graphify.
 
 ## Chat Layer
 

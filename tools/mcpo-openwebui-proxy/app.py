@@ -52,9 +52,72 @@ KNOWLEDGE_MEMORY_DIR = Path(
 KNOWLEDGE_MEMORY_WRITE_ENABLED = (
     os.environ.get("KNOWLEDGE_MEMORY_WRITE_ENABLED", "false").lower() == "true"
 )
+PRODUCTION_JOB_DIR = Path(
+    os.environ.get(
+        "PRODUCTION_JOB_DIR",
+        str(RESEARCH_REPO_PATH / "projects/reliability-policy-matrix/artifacts/derived/v2_jobs"),
+    )
+)
+PRODUCTION_RUNNER_STATE_DIR = Path(
+    os.environ.get(
+        "PRODUCTION_RUNNER_STATE_DIR",
+        str(RESEARCH_REPO_PATH / "projects/reliability-policy-matrix/artifacts/derived/v2_runner_state"),
+    )
+)
+PRODUCTION_AUDIT_LEDGER = Path(
+    os.environ.get(
+        "PRODUCTION_AUDIT_LEDGER",
+        str(RESEARCH_REPO_PATH / "projects/reliability-policy-matrix/artifacts/derived/production_execution_audit_v2_0.jsonl"),
+    )
+)
+PRODUCTION_RUNNER_LEDGER = Path(
+    os.environ.get(
+        "PRODUCTION_RUNNER_LEDGER",
+        str(RESEARCH_REPO_PATH / "projects/reliability-policy-matrix/artifacts/derived/production_job_runner_events_v2_1.jsonl"),
+    )
+)
+PRODUCTION_MEMORY_EVENT_DIR = Path(
+    os.environ.get(
+        "PRODUCTION_MEMORY_EVENT_DIR",
+        str(RESEARCH_REPO_PATH / "projects/reliability-policy-matrix/artifacts/derived/graph-memory-events"),
+    )
+)
 SECRET_PATTERN = re.compile(
     r"(?i)(api[_-]?key|token|secret|password|bearer\s+[a-z0-9._~+/=-]{16,}|sk-[a-z0-9]{12,}|nvapi-[a-z0-9_-]{12,})"
 )
+PRODUCTION_ALLOWED_CAPABILITIES = {
+    "paperclip_writeback",
+    "chat_to_pr",
+    "chat_to_canary_deploy",
+    "autonomous_rollback",
+    "long_running_agent_jobs",
+    "active_alerting",
+    "graph_memory_ingestion",
+}
+PRODUCTION_STATES = {
+    "queued_dry_run",
+    "approved_for_live_candidate",
+    "lease_acquired",
+    "running",
+    "heartbeat",
+    "completed",
+    "blocked",
+    "cancelled",
+    "rollback_required",
+    "rollback_prepared",
+}
+PRODUCTION_FORBIDDEN_PAYLOAD_KEYS = {
+    "command",
+    "shell",
+    "docker",
+    "token",
+    "api_key",
+    "secret",
+    "password",
+    "path",
+    "filesystem",
+    "raw",
+}
 
 
 def _json_bytes(payload: dict[str, Any]) -> bytes:
@@ -448,6 +511,94 @@ def _openapi_spec() -> dict[str, Any]:
                         },
                         "401": {"description": "Unauthorized"},
                     },
+                }
+            },
+            "/production_execution_status": {
+                "post": {
+                    "operationId": "production_execution_status",
+                    "summary": "Inspect the V2 production execution runner and queued jobs.",
+                    "security": [{"bearerAuth": []}],
+                    "requestBody": {
+                        "required": False,
+                        "content": {"application/json": {"schema": {"type": "object", "properties": {}, "additionalProperties": False}}},
+                    },
+                    "responses": {"200": {"description": "Production execution status", "content": {"application/json": {"schema": {"type": "object"}}}}, "401": {"description": "Unauthorized"}},
+                }
+            },
+            "/production_job_enqueue": {
+                "post": {
+                    "operationId": "production_job_enqueue",
+                    "summary": "Create a typed dry-run production job packet.",
+                    "security": [{"bearerAuth": []}],
+                    "requestBody": {
+                        "required": True,
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "job_id": {"type": "string"},
+                                        "capability": {"type": "string"},
+                                        "issue_id": {"type": "string"},
+                                        "budget_minutes": {"type": "integer", "default": 5},
+                                        "max_attempts": {"type": "integer", "default": 1},
+                                        "heartbeat_seconds": {"type": "integer", "default": 60},
+                                    },
+                                    "required": ["job_id", "capability"],
+                                    "additionalProperties": False,
+                                }
+                            }
+                        },
+                    },
+                    "responses": {"200": {"description": "Production job enqueue result", "content": {"application/json": {"schema": {"type": "object"}}}}, "401": {"description": "Unauthorized"}},
+                }
+            },
+            "/production_job_status": {
+                "post": {
+                    "operationId": "production_job_status",
+                    "summary": "Inspect one typed production job packet and runner state.",
+                    "security": [{"bearerAuth": []}],
+                    "requestBody": {
+                        "required": True,
+                        "content": {"application/json": {"schema": {"type": "object", "properties": {"job_id": {"type": "string"}}, "required": ["job_id"], "additionalProperties": False}}},
+                    },
+                    "responses": {"200": {"description": "Production job status result", "content": {"application/json": {"schema": {"type": "object"}}}}, "401": {"description": "Unauthorized"}},
+                }
+            },
+            "/production_job_cancel": {
+                "post": {
+                    "operationId": "production_job_cancel",
+                    "summary": "Cancel a queued or running production job packet.",
+                    "security": [{"bearerAuth": []}],
+                    "requestBody": {
+                        "required": True,
+                        "content": {"application/json": {"schema": {"type": "object", "properties": {"job_id": {"type": "string"}, "reason": {"type": "string", "default": "operator_cancelled"}}, "required": ["job_id"], "additionalProperties": False}}},
+                    },
+                    "responses": {"200": {"description": "Production job cancellation result", "content": {"application/json": {"schema": {"type": "object"}}}}, "401": {"description": "Unauthorized"}},
+                }
+            },
+            "/production_job_approve": {
+                "post": {
+                    "operationId": "production_job_approve",
+                    "summary": "Approve a queued dry-run packet as a live candidate without executing it.",
+                    "security": [{"bearerAuth": []}],
+                    "requestBody": {
+                        "required": True,
+                        "content": {"application/json": {"schema": {"type": "object", "properties": {"job_id": {"type": "string"}, "approved_by": {"type": "string"}, "approval": {"type": "string", "default": "human_approved"}}, "required": ["job_id", "approved_by"], "additionalProperties": False}}},
+                    },
+                    "responses": {"200": {"description": "Production job approval result", "content": {"application/json": {"schema": {"type": "object"}}}}, "401": {"description": "Unauthorized"}},
+                }
+            },
+            "/production_audit_tail": {
+                "post": {
+                    "operationId": "production_audit_tail",
+                    "summary": "Return a redacted tail of V2 production execution audit events.",
+                    "security": [{"bearerAuth": []}],
+                    "requestBody": {
+                        "required": False,
+                        "content": {"application/json": {"schema": {"type": "object", "properties": {"limit": {"type": "integer", "default": 20}}, "additionalProperties": False}}},
+                    },
+                    "responses": {"200": {"description": "Production audit tail", "content": {"application/json": {"schema": {"type": "object"}}}}, "401": {"description": "Unauthorized"}},
                 }
             },
             "/get_current_time": {
@@ -1986,6 +2137,388 @@ def _knowledge_memory_record(payload: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _production_checked_at() -> str:
+    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
+
+def _production_safe_id(value: Any) -> str:
+    return re.sub(r"[^A-Za-z0-9_.-]+", "-", _as_string(value)).strip("-")[:96]
+
+
+def _production_digest(value: Any) -> str:
+    return str(uuid.uuid5(uuid.NAMESPACE_URL, json.dumps(value, sort_keys=True, default=str)))
+
+
+def _production_redact(value: Any) -> Any:
+    if isinstance(value, dict):
+        return {key: _production_redact(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_production_redact(item) for item in value]
+    return SECRET_PATTERN.sub("[redacted]", str(value))
+
+
+def _production_forbidden_keys(payload: Any) -> list[str]:
+    found: set[str] = set()
+    if isinstance(payload, dict):
+        for key, value in payload.items():
+            key_text = str(key).lower()
+            if key_text in PRODUCTION_FORBIDDEN_PAYLOAD_KEYS or key_text.endswith(
+                ("_token", "_secret", "_password", "_api_key")
+            ):
+                found.add(str(key))
+            found.update(_production_forbidden_keys(value))
+    elif isinstance(payload, list):
+        for item in payload:
+            found.update(_production_forbidden_keys(item))
+    return sorted(found)
+
+
+def _production_secret_like(payload: Any) -> bool:
+    if isinstance(payload, dict):
+        return any(_production_secret_like(value) for value in payload.values())
+    if isinstance(payload, list):
+        return any(_production_secret_like(value) for value in payload)
+    if isinstance(payload, (bool, int, float)) or payload is None:
+        return False
+    return bool(SECRET_PATTERN.search(str(payload)))
+
+
+def _production_job_path(job_id: str) -> Path:
+    return PRODUCTION_JOB_DIR / f"{_production_safe_id(job_id)}.json"
+
+
+def _production_state_path(job_id: str) -> Path:
+    return PRODUCTION_RUNNER_STATE_DIR / f"{_production_safe_id(job_id)}.json"
+
+
+def _production_read_json(path: Path, default: Any | None = None) -> Any:
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return default
+
+
+def _production_write_json(path: Path, payload: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def _production_append_jsonl(path: Path, payload: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps(payload, sort_keys=True) + "\n")
+
+
+def _production_base_response(
+    service: str,
+    trace_id: str,
+    decision: str,
+    job_id: str = "",
+    capability: str = "",
+    ok: bool = True,
+    errors: list[str] | None = None,
+    extra: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    payload = {
+        "ok": ok,
+        "service": service,
+        "checked_at": _production_checked_at(),
+        "trace_id": trace_id,
+        "decision": decision,
+        "job_id": job_id,
+        "capability": capability,
+        "audit_refs": [str(PRODUCTION_RUNNER_LEDGER), str(PRODUCTION_AUDIT_LEDGER)],
+        "errors": errors or [],
+        "next_action": "Inspect production_job_status, approve a queued candidate, cancel unsafe work, or run the durable runner from the VPS.",
+    }
+    if extra:
+        payload.update(extra)
+    return payload
+
+
+def _production_event(
+    trace_id: str,
+    job_id: str,
+    capability: str,
+    transition: str,
+    decision: str,
+    details: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    event = {
+        "checked_at": _production_checked_at(),
+        "trace_id": trace_id,
+        "job_id": job_id,
+        "capability": capability,
+        "transition": transition,
+        "decision": decision,
+        "details": _production_redact(details or {}),
+        "secret_free": True,
+    }
+    _production_append_jsonl(PRODUCTION_RUNNER_LEDGER, event)
+    _production_append_jsonl(PRODUCTION_AUDIT_LEDGER, event)
+    PRODUCTION_MEMORY_EVENT_DIR.mkdir(parents=True, exist_ok=True)
+    memory_name = f"{event['checked_at'].replace(':', '').replace('-', '')}-{job_id}-{transition}.md"
+    (PRODUCTION_MEMORY_EVENT_DIR / memory_name).write_text(
+        "\n".join(
+            [
+                f"# Production Job Event {job_id}",
+                "",
+                f"- Time: {event['checked_at']}",
+                f"- Trace ID: {trace_id}",
+                f"- Capability: {capability}",
+                f"- Transition: {transition}",
+                f"- Decision: {decision}",
+                "",
+                "OpenWebUI -> MCPO production execution API -> durable runner -> audit ledger -> Obsidian/Graphify memory.",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    return event
+
+
+def _production_packet_errors(packet: dict[str, Any]) -> list[str]:
+    errors = []
+    if not _production_safe_id(packet.get("id")):
+        errors.append("job_id is required")
+    capability = _as_string(packet.get("capability"))
+    if capability not in PRODUCTION_ALLOWED_CAPABILITIES:
+        errors.append(f"capability is not allowlisted: {capability}")
+    if _as_string(packet.get("status", "queued_dry_run")) not in PRODUCTION_STATES:
+        errors.append("status is not a valid production runner state")
+    forbidden = _production_forbidden_keys(packet)
+    if forbidden:
+        errors.append(f"forbidden payload keys: {', '.join(forbidden)}")
+    if _production_secret_like(packet):
+        errors.append("secret-like content is not allowed")
+    return errors
+
+
+def _production_job_enqueue(payload: dict[str, Any]) -> dict[str, Any]:
+    trace_id = str(uuid.uuid4())
+    if _production_forbidden_keys(payload) or _production_secret_like(payload):
+        return _production_base_response(
+            "production_job_enqueue",
+            trace_id,
+            "blocked_unsafe_payload",
+            ok=False,
+            errors=["endpoint does not accept raw commands, paths, tokens, or secret-like content"],
+        )
+    job_id = _production_safe_id(payload.get("job_id"))
+    capability = _as_string(payload.get("capability"))
+    try:
+        budget_minutes = max(1, min(int(payload.get("budget_minutes", 5) or 5), 240))
+        max_attempts = max(1, min(int(payload.get("max_attempts", 1) or 1), 5))
+        heartbeat_seconds = max(10, min(int(payload.get("heartbeat_seconds", 60) or 60), 3600))
+    except (TypeError, ValueError):
+        return _production_base_response(
+            "production_job_enqueue",
+            trace_id,
+            "invalid_numeric_budget",
+            job_id,
+            capability,
+            ok=False,
+            errors=["budget_minutes, max_attempts, and heartbeat_seconds must be integers"],
+        )
+    packet = {
+        "id": job_id,
+        "issue_id": _as_string(payload.get("issue_id") or "VEL-v2.1"),
+        "capability": capability,
+        "status": "queued_dry_run",
+        "policy_decision": "dry_run_ready",
+        "budget_minutes": budget_minutes,
+        "max_attempts": max_attempts,
+        "heartbeat_seconds": heartbeat_seconds,
+        "lease_owner": "",
+        "created_at": _production_checked_at(),
+        "input_hash": _production_digest(payload),
+        "secret_free": True,
+    }
+    errors = _production_packet_errors(packet)
+    if errors:
+        return _production_base_response(
+            "production_job_enqueue",
+            trace_id,
+            "blocked_invalid_packet",
+            job_id,
+            capability,
+            ok=False,
+            errors=errors,
+        )
+    state = {
+        "job_id": job_id,
+        "capability": capability,
+        "state": "queued_dry_run",
+        "attempts": 0,
+        "lease_owner": "",
+        "lease_expires_at": 0,
+        "last_transition_at": _production_checked_at(),
+        "trace_id": trace_id,
+        "idempotency_key": _production_digest({"job_id": job_id, "capability": capability}),
+        "job_input_hash": packet["input_hash"],
+        "secret_free": True,
+    }
+    _production_write_json(_production_job_path(job_id), packet)
+    _production_write_json(_production_state_path(job_id), state)
+    event = _production_event(trace_id, job_id, capability, "enqueue", "queued_dry_run", {"source": "openwebui"})
+    return _production_base_response(
+        "production_job_enqueue",
+        trace_id,
+        "queued_dry_run",
+        job_id,
+        capability,
+        extra={"job": packet, "state": state, "event": event},
+    )
+
+
+def _production_job_status(payload: dict[str, Any]) -> dict[str, Any]:
+    trace_id = str(uuid.uuid4())
+    job_id = _production_safe_id(payload.get("job_id"))
+    if not job_id:
+        return _production_base_response("production_job_status", trace_id, "invalid_input", ok=False, errors=["job_id is required"])
+    job = _production_read_json(_production_job_path(job_id), None)
+    state = _production_read_json(_production_state_path(job_id), {})
+    if not isinstance(job, dict):
+        return _production_base_response("production_job_status", trace_id, "not_found", job_id, ok=False, errors=["job not found"])
+    return _production_base_response(
+        "production_job_status",
+        trace_id,
+        "status_ready",
+        job_id,
+        _as_string(job.get("capability")),
+        extra={"job": _production_redact(job), "state": _production_redact(state)},
+    )
+
+
+def _production_execution_status() -> dict[str, Any]:
+    trace_id = str(uuid.uuid4())
+    jobs = []
+    for path in sorted(PRODUCTION_JOB_DIR.glob("*.json")):
+        job = _production_read_json(path, {})
+        if not isinstance(job, dict):
+            continue
+        job_id = _as_string(job.get("id") or path.stem)
+        state = _production_read_json(_production_state_path(job_id), {})
+        jobs.append(
+            {
+                "job_id": job_id,
+                "capability": job.get("capability", ""),
+                "job_status": job.get("status", ""),
+                "runner_state": state.get("state", job.get("status", "")) if isinstance(state, dict) else job.get("status", ""),
+                "last_transition_at": state.get("last_transition_at", "") if isinstance(state, dict) else "",
+            }
+        )
+    return _production_base_response(
+        "production_execution_status",
+        trace_id,
+        "status_ready",
+        extra={
+            "job_count": len(jobs),
+            "jobs": jobs,
+            "runner_states": sorted(PRODUCTION_STATES),
+            "mode": "dry_run_default",
+        },
+    )
+
+
+def _production_job_approve(payload: dict[str, Any]) -> dict[str, Any]:
+    trace_id = str(uuid.uuid4())
+    job_id = _production_safe_id(payload.get("job_id"))
+    approved_by = _as_string(payload.get("approved_by"))
+    approval = _as_string(payload.get("approval") or "human_approved")
+    if _production_secret_like(payload):
+        return _production_base_response("production_job_approve", trace_id, "blocked_secret_like_content", job_id, ok=False, errors=["approval payload contains secret-like content"])
+    job = _production_read_json(_production_job_path(job_id), None)
+    if not isinstance(job, dict):
+        return _production_base_response("production_job_approve", trace_id, "not_found", job_id, ok=False, errors=["job not found"])
+    capability = _as_string(job.get("capability"))
+    if approval != "human_approved" or not approved_by:
+        return _production_base_response("production_job_approve", trace_id, "blocked_missing_human_approval", job_id, capability, ok=False, errors=["human_approved approval and approved_by are required"])
+    state = _production_read_json(_production_state_path(job_id), {})
+    if not isinstance(state, dict):
+        state = {}
+    if state.get("state") in {"completed", "cancelled"}:
+        return _production_base_response("production_job_approve", trace_id, "blocked_terminal_state", job_id, capability, ok=False, errors=[f"job is already {state.get('state')}"])
+    job["status"] = "approved_for_live_candidate"
+    state.update(
+        {
+            "job_id": job_id,
+            "capability": capability,
+            "state": "approved_for_live_candidate",
+            "approved_by": approved_by,
+            "approved_at": _production_checked_at(),
+            "last_transition_at": _production_checked_at(),
+            "trace_id": state.get("trace_id") or trace_id,
+            "idempotency_key": state.get("idempotency_key") or _production_digest({"job_id": job_id, "capability": capability}),
+            "job_input_hash": job.get("input_hash", ""),
+            "secret_free": True,
+        }
+    )
+    _production_write_json(_production_job_path(job_id), job)
+    _production_write_json(_production_state_path(job_id), state)
+    event = _production_event(trace_id, job_id, capability, "approve", "approved_for_live_candidate", {"approved_by": approved_by})
+    return _production_base_response("production_job_approve", trace_id, "approved_for_live_candidate", job_id, capability, extra={"state": state, "event": event})
+
+
+def _production_job_cancel(payload: dict[str, Any]) -> dict[str, Any]:
+    trace_id = str(uuid.uuid4())
+    job_id = _production_safe_id(payload.get("job_id"))
+    reason = _as_string(payload.get("reason") or "operator_cancelled")[:240]
+    if _production_secret_like(payload):
+        return _production_base_response("production_job_cancel", trace_id, "blocked_secret_like_content", job_id, ok=False, errors=["cancel payload contains secret-like content"])
+    job = _production_read_json(_production_job_path(job_id), None)
+    if not isinstance(job, dict):
+        return _production_base_response("production_job_cancel", trace_id, "not_found", job_id, ok=False, errors=["job not found"])
+    capability = _as_string(job.get("capability"))
+    state = _production_read_json(_production_state_path(job_id), {})
+    if not isinstance(state, dict):
+        state = {}
+    job["status"] = "cancelled"
+    state.update(
+        {
+            "job_id": job_id,
+            "capability": capability,
+            "state": "cancelled",
+            "cancel_reason": reason,
+            "last_transition_at": _production_checked_at(),
+            "lease_owner": "",
+            "lease_expires_at": 0,
+            "trace_id": state.get("trace_id") or trace_id,
+            "idempotency_key": state.get("idempotency_key") or _production_digest({"job_id": job_id, "capability": capability}),
+            "job_input_hash": job.get("input_hash", ""),
+            "secret_free": True,
+        }
+    )
+    _production_write_json(_production_job_path(job_id), job)
+    _production_write_json(_production_state_path(job_id), state)
+    event = _production_event(trace_id, job_id, capability, "cancel", "cancelled", {"reason": reason})
+    return _production_base_response("production_job_cancel", trace_id, "cancelled", job_id, capability, extra={"state": state, "event": event})
+
+
+def _production_audit_tail(payload: dict[str, Any]) -> dict[str, Any]:
+    trace_id = str(uuid.uuid4())
+    try:
+        limit = max(1, min(int(payload.get("limit", 20) or 20), 100))
+    except (TypeError, ValueError):
+        limit = 20
+    records = []
+    for path in (PRODUCTION_AUDIT_LEDGER, PRODUCTION_RUNNER_LEDGER):
+        if not path.exists():
+            continue
+        for line in path.read_text(encoding="utf-8").splitlines()[-limit:]:
+            try:
+                records.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
+    return _production_base_response(
+        "production_audit_tail",
+        trace_id,
+        "audit_tail_ready",
+        extra={"records": _production_redact(records[-limit:]), "limit": limit},
+    )
+
+
 class Handler(BaseHTTPRequestHandler):
     server_version = "VeloceMCPOProxy/0.1"
 
@@ -2040,6 +2573,12 @@ class Handler(BaseHTTPRequestHandler):
             "/knowledge_graph_status",
             "/knowledge_graph_query",
             "/knowledge_memory_record",
+            "/production_execution_status",
+            "/production_job_enqueue",
+            "/production_job_status",
+            "/production_job_cancel",
+            "/production_job_approve",
+            "/production_audit_tail",
             "/get_current_time",
             "/convert_time",
         }:
@@ -2105,6 +2644,12 @@ class Handler(BaseHTTPRequestHandler):
             "/knowledge_graph_status",
             "/knowledge_graph_query",
             "/knowledge_memory_record",
+            "/production_execution_status",
+            "/production_job_enqueue",
+            "/production_job_status",
+            "/production_job_cancel",
+            "/production_job_approve",
+            "/production_audit_tail",
         }:
             length = int(self.headers.get("content-length", "0"))
             body = self.rfile.read(length) if length else b"{}"
@@ -2137,7 +2682,25 @@ class Handler(BaseHTTPRequestHandler):
             if self.path == "/knowledge_graph_query":
                 self._write_json(200, _knowledge_graph_query(payload))
                 return
-            self._write_json(200, _knowledge_memory_record(payload))
+            if self.path == "/knowledge_memory_record":
+                self._write_json(200, _knowledge_memory_record(payload))
+                return
+            if self.path == "/production_execution_status":
+                self._write_json(200, _production_execution_status())
+                return
+            if self.path == "/production_job_enqueue":
+                self._write_json(200, _production_job_enqueue(payload))
+                return
+            if self.path == "/production_job_status":
+                self._write_json(200, _production_job_status(payload))
+                return
+            if self.path == "/production_job_cancel":
+                self._write_json(200, _production_job_cancel(payload))
+                return
+            if self.path == "/production_job_approve":
+                self._write_json(200, _production_job_approve(payload))
+                return
+            self._write_json(200, _production_audit_tail(payload))
             return
 
         length = int(self.headers.get("content-length", "0"))

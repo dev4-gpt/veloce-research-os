@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Veloce Production Packet Schemas V2.5",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "job_packet": {
+      "type": "object",
+      "required": ["id", "capability", "status", "policy_decision", "budget_minutes", "max_attempts", "heartbeat_seconds", "input_hash", "secret_free"],
+      "additionalProperties": true,
+      "properties": {
+        "id": {"type": "string", "pattern": "^[A-Za-z0-9_.-]{1,96}$"},
+        "issue_id": {"type": "string"},
+        "capability": {
+          "type": "string",
+          "enum": [
+            "paperclip_writeback",
+            "chat_to_pr",
+            "chat_to_canary_deploy",
+            "autonomous_rollback",
+            "long_running_agent_jobs",
+            "active_alerting",
+            "graph_memory_ingestion"
+          ]
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "queued_dry_run",
+            "approved_for_live_candidate",
+            "lease_acquired",
+            "running",
+            "heartbeat",
+            "completed",
+            "blocked",
+            "cancelled",
+            "rollback_required",
+            "rollback_prepared"
+          ]
+        },
+        "policy_decision": {"type": "string"},
+        "budget_minutes": {"type": "integer", "minimum": 1, "maximum": 240},
+        "max_attempts": {"type": "integer", "minimum": 1, "maximum": 5},
+        "heartbeat_seconds": {"type": "integer", "minimum": 10, "maximum": 3600},
+        "input_hash": {"type": "string"},
+        "secret_free": {"const": true}
+      }
+    },
+    "runner_event": {
+      "type": "object",
+      "required": ["checked_at", "trace_id", "job_id", "capability", "transition", "state", "decision", "idempotency_key", "secret_free"],
+      "additionalProperties": true,
+      "properties": {
+        "checked_at": {"type": "string"},
+        "trace_id": {"type": "string"},
+        "job_id": {"type": "string"},
+        "capability": {"type": "string"},
+        "transition": {"type": "string"},
+        "state": {"type": "string"},
+        "decision": {"type": "string"},
+        "idempotency_key": {"type": "string"},
+        "secret_free": {"const": true}
+      }
+    },
+    "approval_packet": {
+      "type": "object",
+      "required": ["job_id", "approved_by", "approval"],
+      "additionalProperties": false,
+      "properties": {
+        "job_id": {"type": "string", "pattern": "^[A-Za-z0-9_.-]{1,96}$"},
+        "approved_by": {"type": "string", "minLength": 1},
+        "approval": {"const": "human_approved"}
+      }
+    }
+  }
+}

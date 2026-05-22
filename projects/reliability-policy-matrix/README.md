@@ -267,6 +267,26 @@ artifacts/derived/agent_runner_v2_0I.json
 artifacts/derived/v2I_jobs/
 ```
 
+## V2.1-V2.5 Durable Production Runner
+
+Run the durable execution status and one safe runner pass:
+
+```bash
+make production-runner-status
+make production-runner-once
+```
+
+The runner consumes typed job packets from `artifacts/derived/v2_jobs`, writes state under `artifacts/derived/v2_runner_state`, and mirrors every transition into audit JSONL plus graph-memory markdown. It does not accept raw shell, raw Docker, raw tokens, arbitrary paths, or untyped commands.
+
+Outputs include:
+
+```text
+artifacts/derived/production_job_runner_v2_1.json
+artifacts/derived/production_job_runner_events_v2_1.jsonl
+artifacts/derived/v2_runner_state/
+artifacts/derived/graph-memory-events/
+```
+
 ## Outputs
 
 Generated outputs are written under:
