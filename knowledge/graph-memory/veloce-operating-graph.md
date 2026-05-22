@@ -1,8 +1,8 @@
 ---
 title: Veloce Operating Graph
 source_system: veloce
-generated_at: 2026-05-21T20:32:37Z
-commit: 5bdaa41
+generated_at: 2026-05-22T18:28:59Z
+commit: bd54544
 tags: [veloce, architecture, graph-memory]
 ---
 
@@ -25,6 +25,11 @@ tags: [veloce, architecture, graph-memory]
 - V2.0B Chat-to-PR Proof narrows the first GitHub write path to one generated branch, one docs-only file update, one pull request, audit JSONL, and graph-memory markdown.
 - V2.0C Long-Running Job Heartbeat Proof narrows unattended work to one resumable job packet, one heartbeat record, stale-job detection, audit JSONL, and graph-memory markdown.
 - V2.0D Chat-to-Canary Deploy Proof narrows canary deploy to one no-op candidate, pre/post health snapshots, rollback packet, alert packet, audit JSONL, and graph-memory markdown with no production mutation.
+- V2.0E Autonomous Rollback Proof narrows rollback to one rollback packet, pre/post verification packet, alert packet, audit JSONL, and graph-memory markdown with no destructive production command.
+- V2.0F Paperclip Live Writeback Pilot narrows the first live Paperclip pilot to one scoped issue comment and one disposition update behind explicit env gates and local live config.
+- V2.0G Chat-to-PR Live Pilot narrows the first live GitHub pilot to one docs-only branch, file update, pull request, audit JSONL, and graph-memory markdown.
+- V2.0H Canary Deploy Live Pilot narrows canary promotion to an operator-approved candidate packet with rollback approval, health snapshots, alert packet, and audit JSONL.
+- V2.0I Long-Running Agent Runner narrows agent orchestration to lease acquisition, bounded step planning, heartbeat records, cancellation packet, audit JSONL, and graph-memory markdown.
 
 ## Graph Path
 
@@ -43,3 +48,13 @@ V2.0B chat-to-PR -> generated branch -> docs-only proof file -> pull request -> 
 V2.0C long-running jobs -> job packet -> heartbeat ledger -> stale-job detector -> audit JSONL -> Obsidian/Graphify memory.
 
 V2.0D chat-to-canary -> no-op candidate -> pre/post health snapshots -> rollback packet -> alert packet -> audit JSONL -> Obsidian/Graphify memory.
+
+V2.0E autonomous rollback -> rollback packet -> verification packet -> alert packet -> audit JSONL -> Obsidian/Graphify memory.
+
+V2.0F Paperclip live pilot -> scoped issue comment -> scoped disposition update -> audit JSONL -> Obsidian/Graphify memory.
+
+V2.0G chat-to-PR live pilot -> generated branch -> docs-only proof file -> pull request -> audit JSONL -> Obsidian/Graphify memory.
+
+V2.0H canary live pilot -> approved candidate -> pre/post health snapshots -> rollback approval -> alert packet -> audit JSONL -> Obsidian/Graphify memory.
+
+V2.0I agent runner -> lease -> bounded steps -> heartbeat ledger -> cancellation packet -> audit JSONL -> Obsidian/Graphify memory.

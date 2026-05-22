@@ -47,7 +47,7 @@ def _env(environ: dict[str, str] | None = None) -> dict[str, str]:
 
 def _is_live_requested(config: dict[str, Any], environ: dict[str, str] | None = None) -> bool:
     env = _env(environ)
-    return env.get(str(config.get("live_enable_env", "VELOCE_CANARY_DEPLOY_LIVE"))) == str(
+    return env.get(str(config.get("live_enable_env", "VELOCE_ROLLBACK_LIVE"))) == str(
         config.get("live_enable_value", "1")
     )
 
@@ -57,72 +57,56 @@ def _missing_env(config: dict[str, Any], environ: dict[str, str] | None = None) 
     return [str(name) for name in config.get("required_live_env", []) if not env.get(str(name))]
 
 
-def _health_snapshot(names: list[str], checked_at: str, phase: str, decision: str) -> dict[str, Any]:
-    return {
-        "phase": phase,
-        "checked_at": checked_at,
-        "decision": "planned_dry_run" if decision == "dry_run_ready" else "planned_live_ready",
-        "checks": [
-            {
-                "name": name,
-                "status": "planned",
-                "required": True,
-                "secret_free": True,
-            }
-            for name in names
-        ],
-        "secret_free": True,
-    }
-
-
-def _canary_packet(config: dict[str, Any], checked_at: str, decision: str) -> dict[str, Any]:
+def _rollback_packet(config: dict[str, Any], checked_at: str, decision: str) -> dict[str, Any]:
     payload = {
         "issue_id": str(config.get("issue_id", "")),
-        "candidate_id": str(config.get("candidate_id", "")),
-        "candidate_kind": str(config.get("candidate_kind", "")),
-        "target_environment": str(config.get("target_environment", "canary")),
-        "pre_health_checks": config.get("pre_health_checks", []),
-        "post_health_checks": config.get("post_health_checks", []),
+        "rollback_id": str(config.get("rollback_id", "")),
+        "target_environment": str(config.get("target_environment", "production")),
+        "last_known_good_ref": str(config.get("last_known_good_ref", "")),
+        "rollback_strategy": str(config.get("rollback_strategy", "")),
+        "pre_checks": [str(item) for item in config.get("pre_checks", [])],
+        "post_checks": [str(item) for item in config.get("post_checks", [])],
     }
-    if decision == "dry_run_ready":
-        status = "candidate_dry_run_ready"
-    elif decision == "live_ready":
-        status = "candidate_live_ready"
-    else:
-        status = "blocked"
     return {
         **payload,
-        "status": status,
         "created_at": checked_at,
-        "description": str(config.get("candidate_description", "")),
-        "input_hash": _digest(payload),
-        "production_mutation_performed": False,
-        "secret_free": True,
-    }
-
-
-def _rollback_packet(config: dict[str, Any], checked_at: str, canary: dict[str, Any], decision: str) -> dict[str, Any]:
-    return {
-        "candidate_id": canary["candidate_id"],
-        "created_at": checked_at,
-        "decision": "rollback_packet_ready" if decision in {"dry_run_ready", "live_ready"} else "blocked",
-        "strategy": str(config.get("rollback_strategy", "restore_last_known_good_and_verify_stack_health")),
+        "status": "rollback_dry_run_ready" if decision == "dry_run_ready" else "rollback_live_ready" if decision == "live_ready" else "blocked",
         "requires_human_confirmation": True,
-        "verification": ["stack_health", "knowledge_graph_status"],
+        "input_hash": _digest(payload),
         "production_rollback_performed": False,
         "secret_free": True,
     }
 
 
-def _alert_packet(config: dict[str, Any], checked_at: str, canary: dict[str, Any], stale: bool = False) -> dict[str, Any]:
+def _verification_packet(config: dict[str, Any], checked_at: str, phase: str, decision: str) -> dict[str, Any]:
+    checks = config.get(f"{phase}_checks", [])
     return {
-        "candidate_id": canary["candidate_id"],
+        "phase": phase,
+        "checked_at": checked_at,
+        "decision": "planned_dry_run" if decision == "dry_run_ready" else "planned_live_ready" if decision == "live_ready" else "blocked",
+        "checks": [
+            {
+                "name": str(name),
+                "status": "planned",
+                "required": True,
+                "secret_free": True,
+            }
+            for name in checks
+        ],
+        "secret_free": True,
+    }
+
+
+def _alert_packet(config: dict[str, Any], checked_at: str, rollback: dict[str, Any], decision: str) -> dict[str, Any]:
+    return {
+        "rollback_id": rollback["rollback_id"],
         "created_at": checked_at,
-        "event_type": "canary_deploy_proof",
-        "severity": "info" if not stale else "warning",
+        "event_type": "autonomous_rollback_proof",
+        "severity": "warning",
         "channels": config.get("alert_channels", ["audit_ledger"]),
-        "message": str(config.get("alert_message", "V2.0D canary deploy proof prepared rollback and health gates.")),
+        "message": "V2.0E rollback proof prepared restore, verification, and escalation packets.",
         "sent": False,
+        "decision": "alert_dry_run_ready" if decision == "dry_run_ready" else "alert_live_ready" if decision == "live_ready" else "blocked",
         "secret_free": True,
     }
 
@@ -130,25 +114,23 @@ def _alert_packet(config: dict[str, Any], checked_at: str, canary: dict[str, Any
 def _memory_markdown(report: dict[str, Any]) -> str:
     return "\n".join(
         [
-            f"# {report['proof_title']}",
+            "# V2.0E Autonomous Rollback Proof",
             "",
             f"- Time: {report['checked_at']}",
             f"- Issue: {report['issue_id']}",
             f"- Mode: {report['mode']}",
             f"- Decision: {report['decision']}",
-            f"- Candidate: {report['canary_packet']['candidate_id']}",
-            f"- Pre-health checks: {len(report['pre_health_snapshot']['checks'])}",
-            f"- Post-health checks: {len(report['post_health_snapshot']['checks'])}",
-            f"- Rollback decision: {report['rollback_packet']['decision']}",
+            f"- Rollback: {report['rollback_packet']['rollback_id']}",
+            f"- Production rollback performed: {report['production_rollback_performed']}",
             f"- Audit ledger: {report['audit_ledger']}",
             "",
             "## Scope",
             "",
-            "No-op canary candidate, pre/post health snapshots, rollback packet, and alert packet.",
+            "Rollback packet, pre/post verification packets, alert packet, and escalation notes.",
             "",
-            "## Rollback",
+            "## Safety Boundary",
             "",
-            report["rollback"],
+            "The proof prepares rollback evidence but does not run destructive production commands.",
             "",
         ]
     )
@@ -157,20 +139,20 @@ def _memory_markdown(report: dict[str, Any]) -> str:
 def _markdown(report: dict[str, Any]) -> str:
     return "\n".join(
         [
-            f"# {report['proof_title']}",
+            "# V2.0E Autonomous Rollback Proof",
             "",
             f"Checked at: `{report['checked_at']}`",
             f"Status: `{report['status']}`",
             f"Mode: `{report['mode']}`",
             f"Live requested: `{report['live_requested']}`",
             f"Decision: `{report['decision']}`",
-            f"Candidate: `{report['canary_packet']['candidate_id']}`",
-            f"Production mutation performed: `{report['production_mutation_performed']}`",
+            f"Rollback: `{report['rollback_packet']['rollback_id']}`",
+            f"Production rollback performed: `{report['production_rollback_performed']}`",
             "",
             "## Results",
             "",
-            f"- Canary packet: `{report['canary_result']['decision']}`",
             f"- Rollback packet: `{report['rollback_result']['decision']}`",
+            f"- Verification packet: `{report['verification_result']['decision']}`",
             f"- Alert packet: `{report['alert_result']['decision']}`",
             "",
             "## Audit",
@@ -198,15 +180,11 @@ def run(config_path: Path, environ: dict[str, str] | None = None) -> dict[str, A
     else:
         decision = "live_ready"
 
-    canary = _canary_packet(config, checked_at, decision)
-    pre_health = _health_snapshot([str(item) for item in config.get("pre_health_checks", [])], checked_at, "pre", decision)
-    post_health = _health_snapshot(
-        [str(item) for item in config.get("post_health_checks", [])], checked_at, "post", decision
-    )
-    rollback_packet = _rollback_packet(config, checked_at, canary, decision)
-    alert_packet = _alert_packet(config, checked_at, canary)
-
-    ok = decision in {"dry_run_ready", "live_ready"} and bool(canary["candidate_id"])
+    rollback = _rollback_packet(config, checked_at, decision)
+    pre_verification = _verification_packet(config, checked_at, "pre", decision)
+    post_verification = _verification_packet(config, checked_at, "post", decision)
+    alert = _alert_packet(config, checked_at, rollback, decision)
+    ok = decision in {"dry_run_ready", "live_ready"} and bool(rollback["rollback_id"])
     write_decision = (
         "written_dry_run"
         if decision == "dry_run_ready"
@@ -219,7 +197,6 @@ def run(config_path: Path, environ: dict[str, str] | None = None) -> dict[str, A
         "ok": ok,
         "status": "pass" if ok else "blocked",
         "checked_at": checked_at,
-        "proof_title": str(config.get("proof_title", "V2.0D Chat-to-Canary Deploy Proof")),
         "config": str(config_path),
         "mode": config.get("mode", "dry_run"),
         "issue_id": str(config.get("issue_id", "")),
@@ -228,43 +205,40 @@ def run(config_path: Path, environ: dict[str, str] | None = None) -> dict[str, A
         "live_enabled": live_enabled,
         "missing_env": missing_env if live_requested else [],
         "decision": decision,
-        "canary_packet": canary,
-        "pre_health_snapshot": pre_health,
-        "post_health_snapshot": post_health,
-        "rollback_packet": rollback_packet,
-        "alert_packet": alert_packet,
-        "canary_result": {"decision": write_decision, "path": str(config["canary_packet"])},
+        "rollback_packet": rollback,
+        "pre_verification_packet": pre_verification,
+        "post_verification_packet": post_verification,
+        "alert_packet": alert,
         "rollback_result": {"decision": write_decision, "path": str(config["rollback_packet"])},
+        "verification_result": {"decision": write_decision, "path": str(config["verification_packet"])},
         "alert_result": {"decision": write_decision, "path": str(config["alert_packet"])},
-        "rollback": "Do not promote canary; use rollback packet to restore last-known-good and verify stack health.",
+        "production_rollback_performed": False,
         "audit_ledger": str(config["audit_ledger"]),
         "memory_markdown": str(config["memory_markdown"]),
-        "production_mutation_performed": False,
         "secret_free": True,
     }
 
     ledger = {
-        "action_id": str(config.get("action_id", "v2.0D-chat-to-canary-deploy")),
+        "action_id": "v2.0E-autonomous-rollback",
         "checked_at": checked_at,
         "issue_id": str(config.get("issue_id", "")),
         "actor": str(config.get("actor", "")),
-        "capability": "chat_to_canary_deploy",
+        "capability": "autonomous_rollback",
         "decision": decision,
-        "candidate_id": canary["candidate_id"],
-        "pre_health_checks": len(pre_health["checks"]),
-        "post_health_checks": len(post_health["checks"]),
-        "production_mutation_performed": False,
-        "input_hash": _digest({"canary": canary, "pre": pre_health, "post": post_health}),
+        "rollback_id": rollback["rollback_id"],
+        "production_rollback_performed": False,
+        "input_hash": _digest(rollback),
         "output_hash": _digest(_redact(report)),
-        "rollback": report["rollback"],
+        "verification_result": "prepared",
+        "alert_result": "prepared",
         "secret_free": True,
     }
 
     if ok:
         for path_key, payload in [
-            ("canary_packet", canary),
-            ("rollback_packet", rollback_packet),
-            ("alert_packet", alert_packet),
+            ("rollback_packet", rollback),
+            ("verification_packet", {"pre": pre_verification, "post": post_verification, "secret_free": True}),
+            ("alert_packet", alert),
         ]:
             path = Path(config[path_key])
             path.parent.mkdir(parents=True, exist_ok=True)
@@ -287,8 +261,8 @@ def run(config_path: Path, environ: dict[str, str] | None = None) -> dict[str, A
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Run V2.0D chat-to-canary deploy proof.")
-    parser.add_argument("--config", default="configs/canary_deploy_v2_0D.json")
+    parser = argparse.ArgumentParser(description="Run V2.0E autonomous rollback proof.")
+    parser.add_argument("--config", default="configs/autonomous_rollback_v2_0E.json")
     args = parser.parse_args()
     report = run(Path(args.config))
     print(json.dumps(report, indent=2))

@@ -238,6 +238,35 @@ artifacts/derived/canary_rollback_packet_v2_0D.json
 artifacts/derived/canary_alert_packet_v2_0D.json
 ```
 
+## V2.0E-I Production Pilot Pack
+
+Run the remaining V2.0 proof/pilot pack in dry-run mode:
+
+```bash
+make v2-e-to-i
+```
+
+The pack adds:
+
+- `make autonomous-rollback-proof`
+- `make paperclip-live-writeback-pilot`
+- `make chat-to-pr-live-pilot`
+- `make canary-deploy-live-pilot`
+- `make agent-runner-proof`
+
+The committed configs stay dry-run safe. Live-capable pilots are blocked unless their explicit env gate is set, `live_enabled` is changed to `true` in a local config copy, scoped credentials or approvals are present, and the production control plane allows the capability. The rollback and canary pilot scripts still perform no production mutation; they prepare packets, health/verification evidence, alerts, and audit records.
+
+Outputs include:
+
+```text
+artifacts/derived/autonomous_rollback_v2_0E.json
+artifacts/derived/paperclip_writeback_v2_0F.json
+artifacts/derived/chat_to_pr_v2_0G.json
+artifacts/derived/canary_deploy_v2_0H.json
+artifacts/derived/agent_runner_v2_0I.json
+artifacts/derived/v2I_jobs/
+```
+
 ## Outputs
 
 Generated outputs are written under:

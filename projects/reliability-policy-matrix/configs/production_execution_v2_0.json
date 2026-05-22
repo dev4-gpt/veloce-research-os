@@ -120,6 +120,41 @@
       "budget_minutes": 20,
       "max_attempts": 1,
       "heartbeat_seconds": 60
+    },
+    {
+      "id": "v2-autonomous-rollback-proof",
+      "capability": "autonomous_rollback",
+      "budget_minutes": 10,
+      "max_attempts": 1,
+      "heartbeat_seconds": 60
+    },
+    {
+      "id": "v2-paperclip-live-writeback-pilot",
+      "capability": "paperclip_writeback",
+      "budget_minutes": 5,
+      "max_attempts": 1,
+      "heartbeat_seconds": 60
+    },
+    {
+      "id": "v2-chat-to-pr-live-pilot",
+      "capability": "chat_to_pr",
+      "budget_minutes": 15,
+      "max_attempts": 1,
+      "heartbeat_seconds": 60
+    },
+    {
+      "id": "v2-canary-deploy-live-pilot",
+      "capability": "chat_to_canary_deploy",
+      "budget_minutes": 20,
+      "max_attempts": 1,
+      "heartbeat_seconds": 60
+    },
+    {
+      "id": "v2-agent-runner-proof",
+      "capability": "long_running_agent_jobs",
+      "budget_minutes": 20,
+      "max_attempts": 1,
+      "heartbeat_seconds": 60
     }
   ]
 }

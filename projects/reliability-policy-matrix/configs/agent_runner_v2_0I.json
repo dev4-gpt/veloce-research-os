@@ -1,0 +1,30 @@
+{
+  "generated_json": "artifacts/derived/agent_runner_v2_0I.json",
+  "generated_markdown": "artifacts/derived/agent_runner_v2_0I.md",
+  "audit_ledger": "artifacts/derived/agent_runner_audit_v2_0I.jsonl",
+  "memory_markdown": "artifacts/derived/agent_runner_memory_v2_0I.md",
+  "runner_ledger": "artifacts/derived/agent_runner_events_v2_0I.jsonl",
+  "cancel_packet": "artifacts/derived/agent_runner_cancel_packet_v2_0I.json",
+  "job_dir": "artifacts/derived/v2I_jobs",
+  "mode": "dry_run",
+  "issue_id": "VEL-v2.0I-DEMO",
+  "actor": "veloce-agent-runner-controller",
+  "live_enable_env": "VELOCE_AGENT_RUNNER_LIVE",
+  "live_enable_value": "1",
+  "live_enabled": false,
+  "required_live_env": [],
+  "job_id": "v2i-long-running-agent-runner",
+  "capability": "long_running_agent_jobs",
+  "lease_owner": "veloce-agent-runner",
+  "budget_minutes": 20,
+  "heartbeat_seconds": 60,
+  "max_steps": 5,
+  "planned_steps": [
+    "load graph context",
+    "prepare bounded worker packet",
+    "record heartbeat",
+    "prepare evidence handoff",
+    "release lease"
+  ],
+  "secret_free_tags": ["v2.0I", "long-running-agent", "runner", "lease", "heartbeat"]
+}

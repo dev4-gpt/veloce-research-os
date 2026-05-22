@@ -1,8 +1,8 @@
 ---
 title: Hermes And Ruflo Skills
 source_system: hermes-ruflo
-generated_at: 2026-05-21T20:32:37Z
-commit: 5bdaa41
+generated_at: 2026-05-22T18:28:59Z
+commit: bd54544
 tags: [hermes, ruflo, skills, orchestration]
 ---
 
@@ -76,4 +76,4 @@ tags: [hermes, ruflo, skills, orchestration]
 
 ## Runtime Boundary
 
-Hermes and Ruflo can receive graph query results as structured context. Ruflo runtime execution remains gated until capability, policy, audit, alerting, canary, rollback, and kill-switch controls are active.
+Hermes and Ruflo can receive graph query results as structured context. Ruflo runtime execution remains gated until capability, policy, audit, alerting, canary, rollback, long-running runner, and kill-switch controls are active.

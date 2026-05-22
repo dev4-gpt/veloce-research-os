@@ -189,7 +189,7 @@ def _github_live_flow(config: dict[str, Any], token: str, repo: str, branch: str
 def _memory_markdown(report: dict[str, Any]) -> str:
     return "\n".join(
         [
-            "# V2.0B Chat-to-PR Proof",
+            f"# {report['proof_title']}",
             "",
             f"- Time: {report['checked_at']}",
             f"- Issue: {report['issue_id']}",
@@ -215,7 +215,7 @@ def _memory_markdown(report: dict[str, Any]) -> str:
 def _markdown(report: dict[str, Any]) -> str:
     return "\n".join(
         [
-            "# V2.0B Chat-to-PR Proof",
+            f"# {report['proof_title']}",
             "",
             f"Checked at: `{report['checked_at']}`",
             f"Status: `{report['status']}`",
@@ -293,6 +293,7 @@ def run(config_path: Path, environ: dict[str, str] | None = None) -> dict[str, A
         "ok": ok,
         "status": "pass" if ok else "blocked",
         "checked_at": checked_at,
+        "proof_title": str(config.get("proof_title", "V2.0B Chat-to-PR Proof")),
         "config": str(config_path),
         "mode": config.get("mode", "dry_run"),
         "issue_id": issue_id,
@@ -317,7 +318,7 @@ def run(config_path: Path, environ: dict[str, str] | None = None) -> dict[str, A
     }
 
     ledger = {
-        "action_id": "v2.0B-chat-to-pr",
+        "action_id": str(config.get("action_id", "v2.0B-chat-to-pr")),
         "checked_at": checked_at,
         "issue_id": issue_id,
         "actor": config.get("actor", ""),
