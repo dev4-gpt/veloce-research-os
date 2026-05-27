@@ -1,8 +1,8 @@
 ---
 title: Veloce Operating Graph
 source_system: veloce
-generated_at: 2026-05-27T04:23:01Z
-commit: 3b3311f
+generated_at: 2026-05-27T04:40:54Z
+commit: 450b5c6
 tags: [veloce, architecture, graph-memory]
 ---
 
@@ -32,6 +32,7 @@ tags: [veloce, architecture, graph-memory]
 - V2.0I Long-Running Agent Runner narrows agent orchestration to lease acquisition, bounded step planning, heartbeat records, cancellation packet, audit JSONL, and graph-memory markdown.
 - V2.1-V2.5 Production AI OS Completion adds a typed MCPO execution API, durable file-backed runner, job status/approve/cancel endpoints, audit tails, packet schemas, redaction checks, trace IDs, and graph-memory event ingestion.
 - V2.6-V3.1 Production AI OS Pilot Pack evaluates Paperclip live writeback, chat-to-PR, graph memory ingestion, alert webhook delivery, protected canary deploy, and autonomous rollback as separate dry-run safe stages with explicit live gates.
+- V3.2-V3.7 Live Production Rollout starts with a locked Paperclip writeback against VEL-v2.0F-PILOT, then expands through PR, alerting, graph ingestion, protected canary, and rollback only after evidence is recorded.
 
 ## Graph Path
 
@@ -64,3 +65,5 @@ V2.0I agent runner -> lease -> bounded steps -> heartbeat ledger -> cancellation
 V2.1-V2.5 execution API -> typed enqueue/status/approve/cancel -> durable runner -> lease/heartbeat/idempotency -> audit tail -> graph-memory event -> OpenWebUI knowledge query.
 
 V2.6-V3.1 pilot pack -> capability stage -> dry-run or gated live adapter -> audit ledger -> memory markdown -> Graphify rebuild -> OpenWebUI knowledge query.
+
+V3.2 Paperclip live writeback -> locked issue preflight -> one comment and one disposition update -> rollback packet -> audit ledger -> Graphify memory -> OpenWebUI knowledge query.

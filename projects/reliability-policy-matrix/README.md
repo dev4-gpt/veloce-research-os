@@ -157,6 +157,25 @@ artifacts/derived/production_ai_os_v2_6_v3_1_audit.jsonl
 artifacts/derived/production_ai_os_v2_6_v3_1_memory.md
 ```
 
+## V3.2 Paperclip Live Writeback
+
+Run the V3.2 wrapper in dry-run mode:
+
+```bash
+make paperclip-writeback-v3-2
+```
+
+The wrapper locks the first live target to `VEL-v2.0F-PILOT`, creates local untracked wrapper/effective configs under `artifacts/derived/`, adds a V3.2 idempotency marker, records a trace id, and emits a rollback packet for partial failure. Live writeback remains blocked unless `VELOCE_PRODUCTION_AI_OS_LIVE=1`, `VELOCE_PAPERCLIP_WRITEBACK_LIVE=1`, scoped Paperclip env vars, and `live_enabled=true` in a local config copy are all present.
+
+After the dry-run has created the local config, the live command is:
+
+```bash
+VELOCE_PRODUCTION_AI_OS_LIVE=1 \
+VELOCE_PAPERCLIP_WRITEBACK_LIVE=1 \
+python3 scripts/paperclip_live_writeback_v3_2.py \
+  --config artifacts/derived/paperclip_writeback_v3_2_live.local.json
+```
+
 ## V2.0A Paperclip Scoped Writeback Proof
 
 Run the scoped Paperclip writeback proof in dry-run mode:
