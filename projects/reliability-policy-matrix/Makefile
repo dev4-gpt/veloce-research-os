@@ -1,4 +1,4 @@
-.PHONY: matrix-plan run-sample aggregate-sample week1-plan week1-sample week1-full stack-health security-access-review rollback-drill autonomy-controls autonomy-readiness production-execution production-runner-once production-runner-status paperclip-writeback-proof chat-to-pr-proof long-running-job-proof canary-deploy-proof autonomous-rollback-proof paperclip-live-writeback-pilot chat-to-pr-live-pilot canary-deploy-live-pilot agent-runner-proof v2-e-to-i test clean
+.PHONY: matrix-plan run-sample aggregate-sample week1-plan week1-sample week1-full stack-health security-access-review rollback-drill autonomy-controls autonomy-readiness production-execution production-runner-once production-runner-status production-ai-os-pilot-pack paperclip-writeback-proof chat-to-pr-proof long-running-job-proof canary-deploy-proof autonomous-rollback-proof paperclip-live-writeback-pilot chat-to-pr-live-pilot canary-deploy-live-pilot agent-runner-proof v2-e-to-i test clean
 
 PYTHON ?= python3
 
@@ -45,6 +45,9 @@ production-runner-once:
 production-runner-status:
 	$(PYTHON) scripts/production_job_runner.py --config configs/production_job_runner_v2_1.json --action status
 
+production-ai-os-pilot-pack:
+	$(PYTHON) scripts/production_ai_os_pilot_pack.py --config configs/production_ai_os_v2_6_v3_1.json
+
 paperclip-writeback-proof:
 	$(PYTHON) scripts/paperclip_writeback_proof.py --config configs/paperclip_writeback_v2_0A.json
 
@@ -72,7 +75,7 @@ canary-deploy-live-pilot:
 agent-runner-proof:
 	$(PYTHON) scripts/agent_runner_proof.py --config configs/agent_runner_v2_0I.json
 
-v2-e-to-i: autonomous-rollback-proof paperclip-live-writeback-pilot chat-to-pr-live-pilot canary-deploy-live-pilot agent-runner-proof production-execution production-runner-once
+v2-e-to-i: autonomous-rollback-proof paperclip-live-writeback-pilot chat-to-pr-live-pilot canary-deploy-live-pilot agent-runner-proof production-execution production-runner-once production-ai-os-pilot-pack
 
 test:
 	$(PYTHON) -m unittest discover -s tests

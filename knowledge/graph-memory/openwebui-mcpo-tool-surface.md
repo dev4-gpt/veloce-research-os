@@ -1,8 +1,8 @@
 ---
 title: OpenWebUI MCPO Tool Surface
 source_system: openwebui
-generated_at: 2026-05-22T19:00:40Z
-commit: 6560e6b
+generated_at: 2026-05-27T04:23:01Z
+commit: 3b3311f
 tags: [openwebui, mcpo, tools]
 ---
 
@@ -51,4 +51,4 @@ tags: [openwebui, mcpo, tools]
 
 ## Product Meaning
 
-OpenWebUI users analyze Veloce through this typed tool surface. The graph memory endpoints are the bridge from chat to Obsidian and Graphify. V2.0B extends the approved-chat path toward docs-only GitHub pull requests; V2.0C adds heartbeat and stale-job controls; V2.0D prepares no-op canary, rollback, and alert packets before production mutation is allowed. V2.0E-I complete the pilot pack with rollback proof, live Paperclip/PR/canary pilot configs, and a bounded agent runner. V2.1-V2.5 add typed production execution endpoints for status, enqueue, approve, cancel, and audit tail.
+OpenWebUI users analyze Veloce through this typed tool surface. The graph memory endpoints are the bridge from chat to Obsidian and Graphify. V2.0B extends the approved-chat path toward docs-only GitHub pull requests; V2.0C adds heartbeat and stale-job controls; V2.0D prepares no-op canary, rollback, and alert packets before production mutation is allowed. V2.0E-I complete the pilot pack with rollback proof, live Paperclip/PR/canary pilot configs, and a bounded agent runner. V2.1-V2.5 add typed production execution endpoints for status, enqueue, approve, cancel, and audit tail. V2.6-V3.1 adds a dry-run safe pilot pack for Paperclip, GitHub PRs, graph ingestion, alerting, canary, and rollback.

@@ -163,6 +163,7 @@ def export_graph_memory(repo_root: Path, out_dir: Path, paperclip_jsonl: Path | 
 - V2.0H Canary Deploy Live Pilot narrows canary promotion to an operator-approved candidate packet with rollback approval, health snapshots, alert packet, and audit JSONL.
 - V2.0I Long-Running Agent Runner narrows agent orchestration to lease acquisition, bounded step planning, heartbeat records, cancellation packet, audit JSONL, and graph-memory markdown.
 - V2.1-V2.5 Production AI OS Completion adds a typed MCPO execution API, durable file-backed runner, job status/approve/cancel endpoints, audit tails, packet schemas, redaction checks, trace IDs, and graph-memory event ingestion.
+- V2.6-V3.1 Production AI OS Pilot Pack evaluates Paperclip live writeback, chat-to-PR, graph memory ingestion, alert webhook delivery, protected canary deploy, and autonomous rollback as separate dry-run safe stages with explicit live gates.
 
 ## Graph Path
 
@@ -193,6 +194,8 @@ V2.0H canary live pilot -> approved candidate -> pre/post health snapshots -> ro
 V2.0I agent runner -> lease -> bounded steps -> heartbeat ledger -> cancellation packet -> audit JSONL -> Obsidian/Graphify memory.
 
 V2.1-V2.5 execution API -> typed enqueue/status/approve/cancel -> durable runner -> lease/heartbeat/idempotency -> audit tail -> graph-memory event -> OpenWebUI knowledge query.
+
+V2.6-V3.1 pilot pack -> capability stage -> dry-run or gated live adapter -> audit ledger -> memory markdown -> Graphify rebuild -> OpenWebUI knowledge query.
 """
     path = out_dir / "veloce-operating-graph.md"
     _write_markdown(path, "Veloce Operating Graph", ["veloce", "architecture", "graph-memory"], "veloce", operating_body, commit)
@@ -207,7 +210,7 @@ V2.1-V2.5 execution API -> typed enqueue/status/approve/cancel -> durable runner
             "",
             "## Product Meaning",
             "",
-            "OpenWebUI users analyze Veloce through this typed tool surface. The graph memory endpoints are the bridge from chat to Obsidian and Graphify. V2.0B extends the approved-chat path toward docs-only GitHub pull requests; V2.0C adds heartbeat and stale-job controls; V2.0D prepares no-op canary, rollback, and alert packets before production mutation is allowed. V2.0E-I complete the pilot pack with rollback proof, live Paperclip/PR/canary pilot configs, and a bounded agent runner. V2.1-V2.5 add typed production execution endpoints for status, enqueue, approve, cancel, and audit tail.",
+            "OpenWebUI users analyze Veloce through this typed tool surface. The graph memory endpoints are the bridge from chat to Obsidian and Graphify. V2.0B extends the approved-chat path toward docs-only GitHub pull requests; V2.0C adds heartbeat and stale-job controls; V2.0D prepares no-op canary, rollback, and alert packets before production mutation is allowed. V2.0E-I complete the pilot pack with rollback proof, live Paperclip/PR/canary pilot configs, and a bounded agent runner. V2.1-V2.5 add typed production execution endpoints for status, enqueue, approve, cancel, and audit tail. V2.6-V3.1 adds a dry-run safe pilot pack for Paperclip, GitHub PRs, graph ingestion, alerting, canary, and rollback.",
         ]
     )
     path = out_dir / "openwebui-mcpo-tool-surface.md"
@@ -274,6 +277,8 @@ Graphify extracts a graph from code, docs, runbooks, and graph-memory markdown i
 Graph-memory markdown files are the preferred human-facing evidence nodes. `manifest.json` exists for automation bookkeeping and should not outrank markdown notes in normal product queries.
 
 V2.1-V2.5 production job events are emitted as secret-free markdown under the derived graph-memory event directory, then can be mirrored into Obsidian and re-extracted by Graphify.
+
+V2.6-V3.1 pilot pack events are emitted as secret-free markdown and audit JSONL so OpenWebUI can query what is ready, blocked, or awaiting live approval.
 
 ## Chat Layer
 

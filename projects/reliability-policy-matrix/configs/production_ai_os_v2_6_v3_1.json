@@ -1,0 +1,74 @@
+{
+  "generated_json": "artifacts/derived/production_ai_os_v2_6_v3_1.json",
+  "generated_markdown": "artifacts/derived/production_ai_os_v2_6_v3_1.md",
+  "audit_ledger": "artifacts/derived/production_ai_os_v2_6_v3_1_audit.jsonl",
+  "memory_markdown": "artifacts/derived/production_ai_os_v2_6_v3_1_memory.md",
+  "mode": "dry_run",
+  "issue_id": "VEL-v2.6-v3.1",
+  "actor": "veloce-production-ai-os-controller",
+  "global_live_enable_env": "VELOCE_PRODUCTION_AI_OS_LIVE",
+  "global_live_enable_value": "1",
+  "stages": [
+    {
+      "id": "v2.6-paperclip-live-writeback",
+      "capability": "paperclip_writeback",
+      "title": "V2.6 Paperclip scoped live writeback",
+      "config": "configs/paperclip_writeback_v2_0F.json",
+      "live_enable_env": "VELOCE_PAPERCLIP_WRITEBACK_LIVE",
+      "required_live_env": ["PAPERCLIP_BASE_URL", "PAPERCLIP_AUTOMATION_TOKEN"],
+      "live_enabled": false,
+      "rollback": "post correction comment and restore prior disposition"
+    },
+    {
+      "id": "v2.7-chat-to-pr-live-pilot",
+      "capability": "chat_to_pr",
+      "title": "V2.7 docs-only chat-to-PR pilot",
+      "config": "configs/chat_to_pr_v2_0G.json",
+      "live_enable_env": "VELOCE_CHAT_TO_PR_LIVE",
+      "required_live_env": ["GITHUB_TOKEN", "GITHUB_REPOSITORY"],
+      "live_enabled": false,
+      "rollback": "close PR and delete generated branch"
+    },
+    {
+      "id": "v2.8-graph-memory-ingestion",
+      "capability": "graph_memory_ingestion",
+      "title": "V2.8 graph memory auto-ingestion",
+      "adapter_id": "graph_memory_export",
+      "live_enable_env": "VELOCE_GRAPH_MEMORY_INGEST_LIVE",
+      "required_live_env": [],
+      "live_enabled": false,
+      "rollback": "remove generated memory event and rebuild graph from prior commit"
+    },
+    {
+      "id": "v2.9-alert-webhook-live-pilot",
+      "capability": "active_alerting",
+      "title": "V2.9 alert webhook live pilot",
+      "adapter_id": "alert_webhook",
+      "live_enable_env": "VELOCE_ALERT_LIVE",
+      "required_live_env": ["VELOCE_ALERT_WEBHOOK"],
+      "live_enabled": false,
+      "rollback": "send correction alert and disable alert live flag"
+    },
+    {
+      "id": "v3.0-canary-deploy-protected-environment",
+      "capability": "chat_to_canary_deploy",
+      "title": "V3.0 canary deploy with protected environment",
+      "adapter_id": "canary_health_gate",
+      "live_enable_env": "VELOCE_CANARY_DEPLOY_LIVE",
+      "required_live_env": ["VELOCE_CANARY_APPROVED"],
+      "live_enabled": false,
+      "github_environment_required": true,
+      "rollback": "mark rollback_required and require V3.1 rollback approval"
+    },
+    {
+      "id": "v3.1-autonomous-rollback-execution",
+      "capability": "autonomous_rollback",
+      "title": "V3.1 rollback execution with approval gate",
+      "adapter_id": "rollback_drill",
+      "live_enable_env": "VELOCE_ROLLBACK_LIVE",
+      "required_live_env": ["VELOCE_ROLLBACK_APPROVED"],
+      "live_enabled": false,
+      "rollback": "operator escalation if rollback verification fails"
+    }
+  ]
+}

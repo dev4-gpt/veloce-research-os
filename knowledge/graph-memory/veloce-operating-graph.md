@@ -1,8 +1,8 @@
 ---
 title: Veloce Operating Graph
 source_system: veloce
-generated_at: 2026-05-22T19:00:40Z
-commit: 6560e6b
+generated_at: 2026-05-27T04:23:01Z
+commit: 3b3311f
 tags: [veloce, architecture, graph-memory]
 ---
 
@@ -31,6 +31,7 @@ tags: [veloce, architecture, graph-memory]
 - V2.0H Canary Deploy Live Pilot narrows canary promotion to an operator-approved candidate packet with rollback approval, health snapshots, alert packet, and audit JSONL.
 - V2.0I Long-Running Agent Runner narrows agent orchestration to lease acquisition, bounded step planning, heartbeat records, cancellation packet, audit JSONL, and graph-memory markdown.
 - V2.1-V2.5 Production AI OS Completion adds a typed MCPO execution API, durable file-backed runner, job status/approve/cancel endpoints, audit tails, packet schemas, redaction checks, trace IDs, and graph-memory event ingestion.
+- V2.6-V3.1 Production AI OS Pilot Pack evaluates Paperclip live writeback, chat-to-PR, graph memory ingestion, alert webhook delivery, protected canary deploy, and autonomous rollback as separate dry-run safe stages with explicit live gates.
 
 ## Graph Path
 
@@ -61,3 +62,5 @@ V2.0H canary live pilot -> approved candidate -> pre/post health snapshots -> ro
 V2.0I agent runner -> lease -> bounded steps -> heartbeat ledger -> cancellation packet -> audit JSONL -> Obsidian/Graphify memory.
 
 V2.1-V2.5 execution API -> typed enqueue/status/approve/cancel -> durable runner -> lease/heartbeat/idempotency -> audit tail -> graph-memory event -> OpenWebUI knowledge query.
+
+V2.6-V3.1 pilot pack -> capability stage -> dry-run or gated live adapter -> audit ledger -> memory markdown -> Graphify rebuild -> OpenWebUI knowledge query.

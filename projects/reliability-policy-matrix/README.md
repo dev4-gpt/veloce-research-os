@@ -138,6 +138,25 @@ artifacts/derived/production_execution_audit_v2_0.jsonl
 artifacts/derived/v2_jobs/
 ```
 
+## V2.6-V3.1 Production AI OS Pilot Pack
+
+Run the next production AI OS completion pack in dry-run mode:
+
+```bash
+make production-ai-os-pilot-pack
+```
+
+The pack evaluates Paperclip live writeback, chat-to-PR, graph memory ingestion, alert webhook delivery, canary protected deploy, and autonomous rollback as separate gated stages. The committed config remains dry-run safe. A stage can only move toward live action when the global live gate, the stage live gate, `live_enabled=true` in a local config copy, and scoped required env vars are all present.
+
+Outputs:
+
+```text
+artifacts/derived/production_ai_os_v2_6_v3_1.json
+artifacts/derived/production_ai_os_v2_6_v3_1.md
+artifacts/derived/production_ai_os_v2_6_v3_1_audit.jsonl
+artifacts/derived/production_ai_os_v2_6_v3_1_memory.md
+```
+
 ## V2.0A Paperclip Scoped Writeback Proof
 
 Run the scoped Paperclip writeback proof in dry-run mode:

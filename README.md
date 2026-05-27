@@ -112,6 +112,7 @@ tools/
 41. For the V2.0D chat-to-canary deploy proof, read `docs/v2.0D-chat-to-canary-deploy-proof.md`.
 42. For the V2.0E-I production pilot pack, read `docs/v2.0E-I-production-pilot-pack.md`.
 43. For the V2.1-V2.5 durable execution runner and production AI OS completion layer, read `docs/v2.1-v2.5-production-ai-os-completion.md`.
+44. For the V2.6-V3.1 production AI OS pilot pack, read `docs/v2.6-v3.1-production-ai-os-pilot-pack.md`.
 
 ## Flagship Project
 
