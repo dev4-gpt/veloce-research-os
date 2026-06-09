@@ -108,9 +108,10 @@ def _vps_readonly_commands(config: dict[str, Any]) -> list[str]:
     container = str(config.get("paperclip_container_hint", "paperclip-iraj-paperclip-1"))
     return [
         "docker ps --format 'table {{.Names}}\\t{{.Image}}\\t{{.Status}}' | grep -i paperclip || true",
-        f"docker inspect {container} --format '{{{{json .Config.Env}}}}' | python3 -m json.tool",
-        f"docker exec {container} sh -lc 'find / -maxdepth 4 -type f \\( -name \"package.json\" -o -name \"routes.*\" -o -name \"schema.prisma\" -o -name \"*.db\" \\) 2>/dev/null | sort | sed -n \"1,160p\"'",
-        f"docker exec {container} sh -lc 'grep -R \"api/issues\\|automation.*token\\|Bearer\\|Authorization\" -n /app /paperclip 2>/dev/null | sed -n \"1,160p\"'",
+        f"docker inspect {container} --format '{{{{range .Config.Env}}}}{{{{println .}}}}{{{{end}}}}' | sed 's/=.*//' | sort",
+        f"docker exec {container} sh -lc 'printf \"PWD=\"; pwd; echo; echo ROOTS; ls -la / | sed -n \"1,120p\"'",
+        f"docker exec {container} sh -lc 'find / -path \"*/.codex/*\" -prune -o -maxdepth 6 -type f \\( -name \"package.json\" -o -name \"routes.*\" -o -name \"schema.prisma\" -o -name \"*.db\" -o -name \"*.sqlite\" -o -name \"*.sqlite3\" \\) -print 2>/dev/null | sort | sed -n \"1,220p\"'",
+        f"docker exec {container} sh -lc 'find / -path \"*/.codex/*\" -prune -o -type f \\( -name \"*.js\" -o -name \"*.mjs\" -o -name \"*.ts\" -o -name \"*.tsx\" -o -name \"*.json\" -o -name \"*.py\" \\) -print 2>/dev/null | xargs grep -n \"api/issues\\|comments\\|disposition\\|automation.*token\\|api.*token\\|Bearer\\|Authorization\" 2>/dev/null | sed -n \"1,240p\"'",
     ]
 
 
