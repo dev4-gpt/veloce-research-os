@@ -159,13 +159,21 @@ artifacts/derived/production_ai_os_v2_6_v3_1_memory.md
 
 ## V3.2 Paperclip Live Writeback
 
+Run read-only Paperclip credential and API-route discovery first:
+
+```bash
+make paperclip-credential-discovery-v3-2
+```
+
+The discovery report probes likely issue API routes and records whether the Paperclip base URL and automation-token env vars are present without printing secret values. It also prints read-only VPS inspection commands for the Paperclip container. It does not create tokens or mutate Paperclip.
+
 Run the V3.2 wrapper in dry-run mode:
 
 ```bash
 make paperclip-writeback-v3-2
 ```
 
-The wrapper locks the first live target to `VEL-v2.0F-PILOT`, creates local untracked wrapper/effective configs under `artifacts/derived/`, adds a V3.2 idempotency marker, records a trace id, and emits a rollback packet for partial failure. Live writeback remains blocked unless `VELOCE_PRODUCTION_AI_OS_LIVE=1`, `VELOCE_PAPERCLIP_WRITEBACK_LIVE=1`, scoped Paperclip env vars, and `live_enabled=true` in a local config copy are all present.
+The wrapper locks the first live target to `VEL-v2.0F-PILOT`, creates local untracked wrapper/effective configs under `artifacts/derived/`, adds a V3.2 idempotency marker, records a trace id, and emits a rollback packet for partial failure. Live writeback remains blocked unless `VELOCE_PRODUCTION_AI_OS_LIVE=1`, `VELOCE_PAPERCLIP_WRITEBACK_LIVE=1`, scoped Paperclip env vars, and `live_enabled=true` in a local config copy are all present. If Paperclip does not expose a native scoped token path, add that path before live writeback; do not use a browser session cookie or direct database write as the production automation credential.
 
 After the dry-run has created the local config, the live command is:
 

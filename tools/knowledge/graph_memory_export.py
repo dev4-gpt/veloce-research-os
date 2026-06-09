@@ -165,6 +165,7 @@ def export_graph_memory(repo_root: Path, out_dir: Path, paperclip_jsonl: Path | 
 - V2.1-V2.5 Production AI OS Completion adds a typed MCPO execution API, durable file-backed runner, job status/approve/cancel endpoints, audit tails, packet schemas, redaction checks, trace IDs, and graph-memory event ingestion.
 - V2.6-V3.1 Production AI OS Pilot Pack evaluates Paperclip live writeback, chat-to-PR, graph memory ingestion, alert webhook delivery, protected canary deploy, and autonomous rollback as separate dry-run safe stages with explicit live gates.
 - V3.2-V3.7 Live Production Rollout starts with a locked Paperclip writeback against VEL-v2.0F-PILOT, then expands through PR, alerting, graph ingestion, protected canary, and rollback only after evidence is recorded.
+- V3.8 Production-Grade Completion Status records the remaining live gates: Paperclip base-route confirmation, scoped automation-token provisioning, one V3.2 live writeback, PR, alerting, graph ingestion, protected canary, and rollback.
 
 ## Graph Path
 
@@ -199,6 +200,7 @@ V2.1-V2.5 execution API -> typed enqueue/status/approve/cancel -> durable runner
 V2.6-V3.1 pilot pack -> capability stage -> dry-run or gated live adapter -> audit ledger -> memory markdown -> Graphify rebuild -> OpenWebUI knowledge query.
 
 V3.2 Paperclip live writeback -> locked issue preflight -> one comment and one disposition update -> rollback packet -> audit ledger -> Graphify memory -> OpenWebUI knowledge query.
+V3.8 production-grade completion -> credential discovery -> scoped token path -> staged live pilots -> final protected canary and rollback gates.
 """
     path = out_dir / "veloce-operating-graph.md"
     _write_markdown(path, "Veloce Operating Graph", ["veloce", "architecture", "graph-memory"], "veloce", operating_body, commit)

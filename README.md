@@ -114,6 +114,7 @@ tools/
 43. For the V2.1-V2.5 durable execution runner and production AI OS completion layer, read `docs/v2.1-v2.5-production-ai-os-completion.md`.
 44. For the V2.6-V3.1 production AI OS pilot pack, read `docs/v2.6-v3.1-production-ai-os-pilot-pack.md`.
 45. For the V3.2-V3.7 live production rollout, read `docs/v3.2-v3.7-live-production-rollout.md`.
+46. For the production-grade completion status and remaining live gates, read `docs/v3.8-production-grade-completion-status.md`.
 
 ## Flagship Project
 

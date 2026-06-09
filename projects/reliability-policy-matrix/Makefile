@@ -1,4 +1,4 @@
-.PHONY: matrix-plan run-sample aggregate-sample week1-plan week1-sample week1-full stack-health security-access-review rollback-drill autonomy-controls autonomy-readiness production-execution production-runner-once production-runner-status production-ai-os-pilot-pack paperclip-writeback-v3-2 paperclip-writeback-proof chat-to-pr-proof long-running-job-proof canary-deploy-proof autonomous-rollback-proof paperclip-live-writeback-pilot chat-to-pr-live-pilot canary-deploy-live-pilot agent-runner-proof v2-e-to-i test clean
+.PHONY: matrix-plan run-sample aggregate-sample week1-plan week1-sample week1-full stack-health security-access-review rollback-drill autonomy-controls autonomy-readiness production-execution production-runner-once production-runner-status production-ai-os-pilot-pack paperclip-credential-discovery-v3-2 paperclip-writeback-v3-2 paperclip-writeback-proof chat-to-pr-proof long-running-job-proof canary-deploy-proof autonomous-rollback-proof paperclip-live-writeback-pilot chat-to-pr-live-pilot canary-deploy-live-pilot agent-runner-proof v2-e-to-i test clean
 
 PYTHON ?= python3
 
@@ -47,6 +47,9 @@ production-runner-status:
 
 production-ai-os-pilot-pack:
 	$(PYTHON) scripts/production_ai_os_pilot_pack.py --config configs/production_ai_os_v2_6_v3_1.json
+
+paperclip-credential-discovery-v3-2:
+	$(PYTHON) scripts/paperclip_credential_discovery_v3_2.py --config configs/paperclip_credential_discovery_v3_2.json
 
 paperclip-writeback-v3-2:
 	$(PYTHON) scripts/paperclip_live_writeback_v3_2.py --config configs/paperclip_writeback_v3_2.json
