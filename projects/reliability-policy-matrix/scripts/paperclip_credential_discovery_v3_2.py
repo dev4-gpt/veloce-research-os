@@ -81,6 +81,15 @@ def _probe_url(url: str, timeout: int = 12) -> dict[str, Any]:
         return {"status": None, "content_type": "", "body_hash": None, "error": type(exc).__name__}
 
 
+def _content_kind(content_type: str) -> str:
+    normalized = content_type.lower()
+    if "json" in normalized:
+        return "json_api"
+    if "html" in normalized:
+        return "frontend_html"
+    return "unknown"
+
+
 def _probe_candidates(config: dict[str, Any], environ: dict[str, str] | None = None) -> list[dict[str, Any]]:
     issue_id = str(config.get("issue_id", "VEL-v2.0F-PILOT"))
     template = str(config.get("issue_get_endpoint_template", "/api/issues/{issue_id}"))
@@ -90,15 +99,22 @@ def _probe_candidates(config: dict[str, Any], environ: dict[str, str] | None = N
         url = _endpoint(base_url, template, issue_id)
         result = _probe_url(url)
         status = result.get("status")
+        content_type = str(result.get("content_type", ""))
+        kind = _content_kind(content_type)
+        api_like = kind == "json_api" or status in {401, 403, 405}
         probes.append(
             {
                 "base_url": base_url,
                 "url": url,
                 "status": status,
-                "content_type": result.get("content_type", ""),
+                "content_type": content_type,
+                "content_kind": kind,
                 "body_hash": result.get("body_hash"),
                 "error": result.get("error"),
-                "possible_api_route": isinstance(status, int) and status in possible_statuses,
+                "api_base_confirmed": bool(api_like),
+                "issue_found": bool(api_like and status == 200),
+                "issue_missing": bool(api_like and status == 404),
+                "possible_api_route": bool(api_like and isinstance(status, int) and status in possible_statuses),
             }
         )
     return probes
@@ -120,6 +136,12 @@ def _decision(probes: list[dict[str, Any]], token_present: bool) -> str:
         return "base_route_candidate_found_token_present"
     if any(item.get("possible_api_route") for item in probes):
         return "base_route_candidate_found_token_missing"
+    if any(item.get("issue_missing") for item in probes) and token_present:
+        return "api_base_found_pilot_issue_missing_token_present"
+    if any(item.get("issue_missing") for item in probes):
+        return "api_base_found_pilot_issue_missing_token_missing"
+    if any(item.get("content_kind") == "frontend_html" for item in probes):
+        return "frontend_routes_only"
     return "base_route_unconfirmed"
 
 
@@ -137,7 +159,9 @@ def _markdown(report: dict[str, Any]) -> str:
     ]
     for probe in report["route_probes"]:
         lines.append(
-            f"- `{probe['base_url']}` -> status `{probe['status']}`, possible API route: `{probe['possible_api_route']}`"
+            f"- `{probe['base_url']}` -> status `{probe['status']}`, kind `{probe['content_kind']}`, "
+            f"API base confirmed: `{probe['api_base_confirmed']}`, issue found: `{probe['issue_found']}`, "
+            f"issue missing: `{probe['issue_missing']}`"
         )
     lines.extend(
         [
@@ -169,14 +193,22 @@ def run(config_path: Path, environ: dict[str, str] | None = None) -> dict[str, A
     probes = _probe_candidates(config, environ)
     decision = _decision(probes, token_present)
     likely = next((item["base_url"] for item in probes if item.get("possible_api_route")), None)
-    next_action = (
-        "Store PAPERCLIP_BASE_URL and PAPERCLIP_AUTOMATION_TOKEN on the VPS, then run the gated V3.2 live wrapper."
-        if token_present and likely
-        else "Inspect the Paperclip backend for a native scoped automation-token mechanism; if absent, add one before live writeback."
-    )
+    if likely is None:
+        likely = next((item["base_url"] for item in probes if item.get("api_base_confirmed")), None)
+    pilot_issue_missing = any(item.get("issue_missing") for item in probes)
+    if pilot_issue_missing:
+        next_action = (
+            "Create or confirm the exact Paperclip pilot issue VEL-v2.0F-PILOT through the UI/API, then provision a "
+            "native scoped PAPERCLIP_AUTOMATION_TOKEN before live writeback."
+        )
+    elif token_present and likely:
+        next_action = "Store PAPERCLIP_BASE_URL and PAPERCLIP_AUTOMATION_TOKEN on the VPS, then run the gated V3.2 live wrapper."
+    else:
+        next_action = "Inspect the Paperclip backend for a native scoped automation-token mechanism; if absent, add one before live writeback."
+    status = "pass" if token_present and any(item.get("possible_api_route") for item in probes) else "needs_inspection"
     report = {
         "ok": True,
-        "status": "pass" if likely else "needs_inspection",
+        "status": status,
         "service": "paperclip_credential_discovery_v3_2",
         "checked_at": checked_at,
         "trace_id": trace_id,
@@ -185,6 +217,7 @@ def run(config_path: Path, environ: dict[str, str] | None = None) -> dict[str, A
         "decision": decision,
         "issue_id": str(config.get("issue_id", "")),
         "likely_base_url": likely,
+        "pilot_issue_missing": pilot_issue_missing,
         "token_env": token_name,
         "token_present": token_present,
         "token_value_printed": False,

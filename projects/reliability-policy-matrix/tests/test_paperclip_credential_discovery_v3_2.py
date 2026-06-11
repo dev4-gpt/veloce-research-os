@@ -80,10 +80,31 @@ class PaperclipCredentialDiscoveryV32Test(unittest.TestCase):
             ):
                 report = discovery.run(path, environ={})
 
-            self.assertEqual(report["decision"], "base_route_unconfirmed")
+            self.assertEqual(report["decision"], "frontend_routes_only")
             self.assertEqual(report["status"], "needs_inspection")
             self.assertGreaterEqual(len(report["vps_readonly_commands"]), 3)
             self.assertTrue((root / "discovery.jsonl").exists())
+
+    def test_json_404_means_api_base_found_but_pilot_issue_missing(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = self._write(root, _config(root))
+
+            with mock.patch.object(
+                discovery,
+                "_probe_url",
+                side_effect=[
+                    {"status": 404, "content_type": "application/json", "body_hash": "a", "error": "HTTPError"},
+                    {"status": 200, "content_type": "text/html", "body_hash": "b", "error": None},
+                ],
+            ):
+                report = discovery.run(path, environ={})
+
+            self.assertEqual(report["decision"], "api_base_found_pilot_issue_missing_token_missing")
+            self.assertEqual(report["likely_base_url"], "https://paperclip.example")
+            self.assertTrue(report["pilot_issue_missing"])
+            self.assertEqual(report["status"], "needs_inspection")
+            self.assertIn("VEL-v2.0F-PILOT", report["next_action"])
 
 
 if __name__ == "__main__":

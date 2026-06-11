@@ -167,6 +167,8 @@ make paperclip-credential-discovery-v3-2
 
 The discovery report probes likely issue API routes and records whether the Paperclip base URL and automation-token env vars are present without printing secret values. It also prints read-only VPS inspection commands for the Paperclip container. It does not create tokens or mutate Paperclip.
 
+On the current VPS, the Paperclip UI route is `https://paperclip-iraj.srv1314350.hstgr.cloud/VEL/dashboard`, but the JSON API base is `https://paperclip-iraj.srv1314350.hstgr.cloud`. Frontend `/VEL/...` paths return HTML, while `/api/health` returns JSON. If `/api/issues/VEL-v2.0F-PILOT` returns JSON `404`, create or confirm the exact pilot issue before attempting live writeback.
+
 Run the V3.2 wrapper in dry-run mode:
 
 ```bash
