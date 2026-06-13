@@ -5,6 +5,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import sys
 import time
 from typing import Any
@@ -16,6 +17,7 @@ import paperclip_writeback_proof
 
 
 ROOT = Path(__file__).resolve().parents[1]
+PAPERCLIP_ISSUE_ID_RE = re.compile(r"^VEL-(?:v2\.0F-PILOT|[0-9]+)$")
 SECRET_KEY_PARTS = ("authorization", "api_key", "apikey", "password")
 SECRET_KEY_SUFFIXES = ("_token", "-token", " token", "_secret", "-secret", " secret")
 
@@ -75,6 +77,17 @@ def _paperclip_env(config: dict[str, Any], environ: dict[str, str] | None = None
     return base_url, token, missing
 
 
+def _target_issue(config: dict[str, Any], environ: dict[str, str] | None = None) -> tuple[str, str, str, bool]:
+    env = _env(environ)
+    env_name = str(config.get("paperclip_pilot_issue_id_env", "PAPERCLIP_PILOT_ISSUE_ID"))
+    env_value = env.get(env_name, "").strip()
+    issue_id = env_value or str(config.get("issue_id", "")).strip()
+    required_issue_id = env_value or str(config.get("required_issue_id", "VEL-v2.0F-PILOT")).strip()
+    source = "env" if env_value else "config"
+    valid_format = bool(PAPERCLIP_ISSUE_ID_RE.match(issue_id)) and bool(PAPERCLIP_ISSUE_ID_RE.match(required_issue_id))
+    return issue_id, required_issue_id, source, valid_format
+
+
 def _endpoint(base_url: str, template: str, issue_id: str) -> str:
     return f"{base_url}{template.format(issue_id=issue_id)}"
 
@@ -119,7 +132,10 @@ def _request_json(
 
 
 def _preflight_decision(config: dict[str, Any], environ: dict[str, str] | None) -> tuple[str, list[str], bool]:
-    if str(config.get("issue_id")) != str(config.get("required_issue_id", "VEL-v2.0F-PILOT")):
+    issue_id, required_issue_id, _, valid_issue_format = _target_issue(config, environ)
+    if not valid_issue_format:
+        return "blocked_invalid_paperclip_issue_id", [], False
+    if issue_id != required_issue_id:
         return "blocked_wrong_issue_id", [], False
     live_requested = _live_requested(config, environ)
     if not live_requested:
@@ -136,9 +152,10 @@ def _previous_issue_state(config: dict[str, Any], environ: dict[str, str] | None
     if decision != "live_ready":
         return {"decision": "not_checked_dry_run", "previous_disposition": None}
     base_url, token, _ = _paperclip_env(config, environ)
+    issue_id, _, _, _ = _target_issue(config, environ)
     allowed_statuses = {int(item) for item in config.get("allowed_statuses", [200, 201, 204])}
     result = _request_json(
-        _endpoint(base_url, str(config.get("issue_get_endpoint_template", "/api/issues/{issue_id}")), str(config["issue_id"])),
+        _endpoint(base_url, str(config.get("issue_get_endpoint_template", "/api/issues/{issue_id}")), issue_id),
         "GET",
         token,
         None,
@@ -157,10 +174,12 @@ def _previous_issue_state(config: dict[str, Any], environ: dict[str, str] | None
     }
 
 
-def _effective_config(config: dict[str, Any], trace_id: str) -> dict[str, Any]:
+def _effective_config(config: dict[str, Any], trace_id: str, environ: dict[str, str] | None = None) -> dict[str, Any]:
     base_path = ROOT / str(config.get("base_config", "configs/paperclip_writeback_v2_0F.json"))
     effective = _load(base_path)
+    issue_id, _, _, _ = _target_issue(config, environ)
     comment = str(config.get("comment_markdown", effective.get("comment_markdown", ""))).rstrip()
+    comment = comment.replace(str(config.get("issue_id", "VEL-v2.0F-PILOT")), issue_id)
     marker = str(config.get("idempotency_marker", "V3.2 Paperclip live pilot"))
     if marker not in comment:
         comment = f"{marker}\n\n{comment}"
@@ -174,7 +193,7 @@ def _effective_config(config: dict[str, Any], trace_id: str) -> dict[str, Any]:
             "mode": config.get("mode", "dry_run"),
             "proof_title": config.get("proof_title", "V3.2 Paperclip Live Writeback"),
             "action_id": config.get("action_id", "v3.2-paperclip-live-writeback"),
-            "issue_id": config["issue_id"],
+            "issue_id": issue_id,
             "actor": config.get("actor", ""),
             "live_enable_env": config.get("live_enable_env", "VELOCE_PAPERCLIP_WRITEBACK_LIVE"),
             "live_enable_value": config.get("live_enable_value", "1"),
@@ -201,9 +220,12 @@ def _write_effective_config(config: dict[str, Any], effective: dict[str, Any]) -
     return path
 
 
-def _write_local_live_config(config: dict[str, Any]) -> Path:
+def _write_local_live_config(config: dict[str, Any], environ: dict[str, str] | None = None) -> Path:
     path = ROOT / str(config["local_live_config"])
     local = dict(config)
+    issue_id, required_issue_id, _, _ = _target_issue(config, environ)
+    local["issue_id"] = issue_id
+    local["required_issue_id"] = required_issue_id
     local["live_enabled"] = True
     local["mode"] = "live_candidate"
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -217,13 +239,14 @@ def _rollback_packet(
     proof_report: dict[str, Any],
     previous: dict[str, Any],
     restore_result: dict[str, Any] | None,
+    environ: dict[str, str] | None = None,
 ) -> dict[str, Any]:
     comment_ok = bool(proof_report.get("comment_result", {}).get("ok"))
     disposition_ok = bool(proof_report.get("disposition_result", {}).get("ok"))
     partial_failure = proof_report.get("decision") == "live_ready" and comment_ok != disposition_ok
     return {
         "trace_id": trace_id,
-        "issue_id": config["issue_id"],
+        "issue_id": _target_issue(config, environ)[0],
         "decision": "rollback_packet_ready" if partial_failure else "rollback_not_required",
         "partial_failure": partial_failure,
         "previous_disposition": previous.get("previous_disposition"),
@@ -246,10 +269,11 @@ def _restore_previous_disposition(
     if not config.get("restore_on_partial_failure", True) or comment_ok == disposition_ok or not previous_disposition:
         return None
     base_url, token, _ = _paperclip_env(config, environ)
+    issue_id, _, _, _ = _target_issue(config, environ)
     allowed_statuses = {int(item) for item in config.get("allowed_statuses", [200, 201, 204])}
     payload = {"disposition": previous_disposition}
     return _request_json(
-        _endpoint(base_url, str(config.get("disposition_endpoint_template", "/api/issues/{issue_id}")), str(config["issue_id"])),
+        _endpoint(base_url, str(config.get("disposition_endpoint_template", "/api/issues/{issue_id}")), issue_id),
         "PATCH",
         token,
         payload,
@@ -306,9 +330,10 @@ def run(config_path: Path, environ: dict[str, str] | None = None) -> dict[str, A
     config = _load(config_path)
     trace_id = str(uuid.uuid4())
     checked_at = _checked_at()
+    issue_id, required_issue_id, issue_id_source, issue_id_valid = _target_issue(config, environ)
     decision, missing_env, live_requested = _preflight_decision(config, environ)
-    effective = _effective_config(config, trace_id)
-    local_live_config = _write_local_live_config(config)
+    effective = _effective_config(config, trace_id, environ)
+    local_live_config = _write_local_live_config(config, environ)
     effective_config = _write_effective_config(config, effective)
     previous = _previous_issue_state(config, environ, decision)
 
@@ -323,7 +348,7 @@ def run(config_path: Path, environ: dict[str, str] | None = None) -> dict[str, A
         }
 
     restore_result = _restore_previous_disposition(config, environ, previous, proof_report) if decision == "live_ready" else None
-    rollback = _rollback_packet(config, trace_id, proof_report, previous, restore_result)
+    rollback = _rollback_packet(config, trace_id, proof_report, previous, restore_result, environ)
     ok = decision == "dry_run_ready" or (decision == "live_ready" and proof_report.get("ok"))
     report = {
         "ok": ok,
@@ -333,8 +358,10 @@ def run(config_path: Path, environ: dict[str, str] | None = None) -> dict[str, A
         "config": str(config_path),
         "local_live_config": str(local_live_config),
         "effective_paperclip_config": str(effective_config),
-        "issue_id": str(config.get("issue_id", "")),
-        "required_issue_id": str(config.get("required_issue_id", "")),
+        "issue_id": issue_id,
+        "required_issue_id": required_issue_id,
+        "issue_id_source": issue_id_source,
+        "issue_id_valid": issue_id_valid,
         "live_requested": live_requested,
         "live_enabled": bool(config.get("live_enabled")),
         "decision": proof_report.get("decision", decision) if decision in {"dry_run_ready", "live_ready"} else decision,
@@ -342,7 +369,7 @@ def run(config_path: Path, environ: dict[str, str] | None = None) -> dict[str, A
         "preflight": {
             "decision": decision,
             "env_present": not missing_env,
-            "issue_locked": str(config.get("issue_id")) == str(config.get("required_issue_id")),
+            "issue_locked": issue_id_valid and issue_id == required_issue_id,
             "previous_issue_state": _redact(previous),
         },
         "comment_result": _redact(proof_report.get("comment_result", {})),
@@ -356,10 +383,10 @@ def run(config_path: Path, environ: dict[str, str] | None = None) -> dict[str, A
         "action_id": config.get("action_id", "v3.2-paperclip-live-writeback"),
         "checked_at": checked_at,
         "trace_id": trace_id,
-        "issue_id": config.get("issue_id"),
+        "issue_id": issue_id,
         "capability": "paperclip_writeback",
         "decision": report["decision"],
-        "input_hash": _digest({"issue_id": config.get("issue_id"), "marker": config.get("idempotency_marker")}),
+        "input_hash": _digest({"issue_id": issue_id, "marker": config.get("idempotency_marker")}),
         "output_hash": _digest(_redact(report)),
         "rollback_packet": rollback["decision"],
         "secret_free": True,

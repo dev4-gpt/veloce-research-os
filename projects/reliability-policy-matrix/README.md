@@ -169,6 +169,16 @@ The discovery report probes likely issue API routes and records whether the Pape
 
 On the current VPS, the Paperclip UI route is `https://paperclip-iraj.srv1314350.hstgr.cloud/VEL/dashboard`, but the JSON API base is `https://paperclip-iraj.srv1314350.hstgr.cloud`. Frontend `/VEL/...` paths return HTML, while `/api/health` returns JSON. If `/api/issues/VEL-v2.0F-PILOT` returns JSON `404`, create or confirm the exact pilot issue before attempting live writeback.
 
+If the UI generates a numeric issue id, pass it explicitly:
+
+```bash
+export PAPERCLIP_PILOT_ISSUE_ID=VEL-145
+make paperclip-credential-discovery-v3-2
+make paperclip-writeback-v3-2
+```
+
+The generated id becomes the exact allowed target for that run. Invalid ids and mismatched target locks are rejected.
+
 Run the V3.2 wrapper in dry-run mode:
 
 ```bash

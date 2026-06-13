@@ -5,6 +5,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import sys
 import time
 from typing import Any
@@ -14,6 +15,7 @@ import uuid
 
 
 ROOT = Path(__file__).resolve().parents[1]
+PAPERCLIP_ISSUE_ID_RE = r"^VEL-(?:v2\.0F-PILOT|[0-9]+)$"
 
 
 def _load(path: Path) -> dict[str, Any]:
@@ -39,6 +41,16 @@ def _env(environ: dict[str, str] | None = None) -> dict[str, str]:
 
 def _endpoint(base_url: str, template: str, issue_id: str) -> str:
     return f"{base_url.rstrip('/')}{template.format(issue_id=issue_id)}"
+
+
+def _issue_id(config: dict[str, Any], environ: dict[str, str] | None = None) -> tuple[str, str, bool]:
+    env = _env(environ)
+    env_name = str(config.get("paperclip_pilot_issue_id_env", "PAPERCLIP_PILOT_ISSUE_ID"))
+    env_value = env.get(env_name, "").strip()
+    if env_value:
+        return env_value, "env", bool(re.match(PAPERCLIP_ISSUE_ID_RE, env_value))
+    configured = str(config.get("issue_id", "VEL-v2.0F-PILOT")).strip()
+    return configured, "config", bool(re.match(PAPERCLIP_ISSUE_ID_RE, configured))
 
 
 def _candidate_base_urls(config: dict[str, Any], environ: dict[str, str] | None = None) -> list[str]:
@@ -91,7 +103,7 @@ def _content_kind(content_type: str) -> str:
 
 
 def _probe_candidates(config: dict[str, Any], environ: dict[str, str] | None = None) -> list[dict[str, Any]]:
-    issue_id = str(config.get("issue_id", "VEL-v2.0F-PILOT"))
+    issue_id, _, _ = _issue_id(config, environ)
     template = str(config.get("issue_get_endpoint_template", "/api/issues/{issue_id}"))
     possible_statuses = {int(item) for item in config.get("possible_api_statuses", [200, 401, 403, 405])}
     probes = []
@@ -190,15 +202,18 @@ def run(config_path: Path, environ: dict[str, str] | None = None) -> dict[str, A
     env = _env(environ)
     token_name = str(config.get("paperclip_token_env", "PAPERCLIP_AUTOMATION_TOKEN"))
     token_present = bool(env.get(token_name, ""))
+    issue_id, issue_id_source, issue_id_valid = _issue_id(config, environ)
     probes = _probe_candidates(config, environ)
-    decision = _decision(probes, token_present)
+    decision = _decision(probes, token_present) if issue_id_valid else "blocked_invalid_paperclip_issue_id"
     likely = next((item["base_url"] for item in probes if item.get("possible_api_route")), None)
     if likely is None:
         likely = next((item["base_url"] for item in probes if item.get("api_base_confirmed")), None)
     pilot_issue_missing = any(item.get("issue_missing") for item in probes)
-    if pilot_issue_missing:
+    if not issue_id_valid:
+        next_action = "Set PAPERCLIP_PILOT_ISSUE_ID to VEL-v2.0F-PILOT or a Paperclip-generated numeric id such as VEL-145."
+    elif pilot_issue_missing:
         next_action = (
-            "Create or confirm the exact Paperclip pilot issue VEL-v2.0F-PILOT through the UI/API, then provision a "
+            f"Create or confirm the exact Paperclip pilot issue {issue_id} through the UI/API, then provision a "
             "native scoped PAPERCLIP_AUTOMATION_TOKEN before live writeback."
         )
     elif token_present and likely:
@@ -215,7 +230,9 @@ def run(config_path: Path, environ: dict[str, str] | None = None) -> dict[str, A
         "config": str(config_path),
         "mode": config.get("mode", "read_only"),
         "decision": decision,
-        "issue_id": str(config.get("issue_id", "")),
+        "issue_id": issue_id,
+        "issue_id_source": issue_id_source,
+        "issue_id_valid": issue_id_valid,
         "likely_base_url": likely,
         "pilot_issue_missing": pilot_issue_missing,
         "token_env": token_name,
@@ -231,7 +248,7 @@ def run(config_path: Path, environ: dict[str, str] | None = None) -> dict[str, A
         "trace_id": trace_id,
         "capability": "paperclip_credential_discovery",
         "decision": decision,
-        "input_hash": _digest({"issue_id": report["issue_id"], "candidates": _candidate_base_urls(config, environ)}),
+        "input_hash": _digest({"issue_id": issue_id, "candidates": _candidate_base_urls(config, environ)}),
         "output_hash": _digest(report),
         "secret_free": True,
     }

@@ -17,6 +17,7 @@ def _config(root: Path) -> dict:
         "audit_ledger": str(root / "discovery.jsonl"),
         "mode": "read_only",
         "issue_id": "VEL-v2.0F-PILOT",
+        "paperclip_pilot_issue_id_env": "PAPERCLIP_PILOT_ISSUE_ID",
         "paperclip_base_url_env": "PAPERCLIP_BASE_URL",
         "paperclip_token_env": "PAPERCLIP_AUTOMATION_TOKEN",
         "candidate_base_urls": [
@@ -105,6 +106,39 @@ class PaperclipCredentialDiscoveryV32Test(unittest.TestCase):
             self.assertTrue(report["pilot_issue_missing"])
             self.assertEqual(report["status"], "needs_inspection")
             self.assertIn("VEL-v2.0F-PILOT", report["next_action"])
+
+    def test_env_generated_issue_id_is_used_for_probe(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = self._write(root, _config(root))
+
+            with mock.patch.object(
+                discovery,
+                "_probe_url",
+                return_value={"status": 401, "content_type": "application/json", "body_hash": "a", "error": "HTTPError"},
+            ):
+                report = discovery.run(path, environ={"PAPERCLIP_PILOT_ISSUE_ID": "VEL-145"})
+
+            self.assertEqual(report["issue_id"], "VEL-145")
+            self.assertEqual(report["issue_id_source"], "env")
+            self.assertTrue(report["issue_id_valid"])
+            self.assertEqual(report["decision"], "base_route_candidate_found_token_missing")
+            self.assertIn("/api/issues/VEL-145", report["route_probes"][0]["url"])
+
+    def test_invalid_env_issue_id_is_blocked(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = self._write(root, _config(root))
+
+            with mock.patch.object(
+                discovery,
+                "_probe_url",
+                return_value={"status": 401, "content_type": "application/json", "body_hash": "a", "error": "HTTPError"},
+            ):
+                report = discovery.run(path, environ={"PAPERCLIP_PILOT_ISSUE_ID": "../bad"})
+
+            self.assertEqual(report["decision"], "blocked_invalid_paperclip_issue_id")
+            self.assertFalse(report["issue_id_valid"])
 
 
 if __name__ == "__main__":

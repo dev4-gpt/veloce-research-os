@@ -12,6 +12,7 @@
   "action_id": "v3.2-paperclip-live-writeback",
   "issue_id": "VEL-v2.0F-PILOT",
   "required_issue_id": "VEL-v2.0F-PILOT",
+  "paperclip_pilot_issue_id_env": "PAPERCLIP_PILOT_ISSUE_ID",
   "actor": "veloce-v3-2-paperclip-live-controller",
   "global_live_enable_env": "VELOCE_PRODUCTION_AI_OS_LIVE",
   "global_live_enable_value": "1",

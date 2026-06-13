@@ -25,6 +25,7 @@ def _config(root: Path) -> dict:
         "action_id": "v3.2-paperclip-live-writeback",
         "issue_id": "VEL-v2.0F-PILOT",
         "required_issue_id": "VEL-v2.0F-PILOT",
+        "paperclip_pilot_issue_id_env": "PAPERCLIP_PILOT_ISSUE_ID",
         "actor": "test",
         "global_live_enable_env": "VELOCE_PRODUCTION_AI_OS_LIVE",
         "global_live_enable_value": "1",
@@ -41,7 +42,7 @@ def _config(root: Path) -> dict:
         "idempotency_marker": "V3.2 Paperclip live pilot",
         "restore_on_partial_failure": True,
         "allowed_statuses": [200, 201, 204],
-        "comment_markdown": "pilot comment",
+        "comment_markdown": "pilot comment for VEL-v2.0F-PILOT",
     }
 
 
@@ -96,11 +97,41 @@ class PaperclipLiveWritebackV32Test(unittest.TestCase):
             self.assertIn("V3.2 Paperclip live pilot", effective["comment_markdown"])
             self.assertIn("Trace ID:", effective["comment_markdown"])
 
+    def test_env_generated_issue_id_updates_local_and_effective_configs(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = self._write(root, _config(root))
+
+            report = v32.run(path, environ={"PAPERCLIP_PILOT_ISSUE_ID": "VEL-145"})
+
+            self.assertTrue(report["ok"])
+            self.assertEqual(report["issue_id"], "VEL-145")
+            self.assertEqual(report["required_issue_id"], "VEL-145")
+            self.assertEqual(report["issue_id_source"], "env")
+            local = json.loads((root / "v32-live.local.json").read_text(encoding="utf-8"))
+            effective = json.loads((root / "v32-effective.local.json").read_text(encoding="utf-8"))
+            self.assertEqual(local["issue_id"], "VEL-145")
+            self.assertEqual(local["required_issue_id"], "VEL-145")
+            self.assertEqual(effective["issue_id"], "VEL-145")
+            self.assertIn("VEL-145", effective["comment_markdown"])
+            self.assertNotIn("VEL-v2.0F-PILOT", effective["comment_markdown"])
+
+    def test_invalid_env_issue_id_blocks(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = self._write(root, _config(root))
+
+            report = v32.run(path, environ={"PAPERCLIP_PILOT_ISSUE_ID": "../bad"})
+
+            self.assertFalse(report["ok"])
+            self.assertEqual(report["decision"], "blocked_invalid_paperclip_issue_id")
+            self.assertFalse(report["issue_id_valid"])
+
     def test_rejects_wrong_issue_id(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             config = _config(root)
-            config["issue_id"] = "VEL-other"
+            config["issue_id"] = "VEL-145"
             path = self._write(root, config)
 
             report = v32.run(
